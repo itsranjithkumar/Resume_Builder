@@ -108,5 +108,15 @@ def generate_resume_pdf(db: Session, resume_id: int):
     c.save()
     return path
 
-def get_user_resumes(db: Session, user_id: int):
-    return db.query(models.Resume).filter(models.Resume.user_id == user_id).all()
+def get_user_resumes(db: Session, user_id: int, offset: int = 0, limit: int = 10):
+    return db.query(models.Resume).filter(models.Resume.user_id == user_id).offset(offset).limit(limit).all()
+
+def change_user_password(db: Session, user_id: int, old_password: str, new_password: str):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user and bcrypt.verify(old_password, user.hashed_password):
+        user.hashed_password = bcrypt.hash(new_password)
+        db.commit()
+        db.refresh(user)
+        return True
+    return False
+

@@ -26,6 +26,9 @@ class Resume(Base):
     experience = Column(Text)
     education = Column(Text)
     projects = Column(Text)
+    achievements = Column(Text)  # New field
+    strengths = Column(Text)     # New field
+    references = Column(Text)    # New field
     contact = Column(String)
     title = Column(String)  # Optional: for backward compatibility
     content = Column(Text)  # Optional: for backward compatibility

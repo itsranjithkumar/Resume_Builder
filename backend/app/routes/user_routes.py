@@ -20,6 +20,37 @@ def get_profile(user_id: int, db: Session = Depends(database.get_db)):
 
 from app.auth import get_current_user
 
+import traceback
+from app import models
+
+@router.get("/{user_id}/profile")
+def get_profile(user_id: int, db: Session = Depends(database.get_db)):
+    user = crud.get_user_profile(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": getattr(user, "full_name", None),
+        "bio": getattr(user, "bio", None),
+        "phone": getattr(user, "phone", None),
+        "profile_picture": getattr(user, "profile_picture", None)
+    }
+
+@router.get("/email/{email}")
+def get_user_by_email(email: str, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "id": user.id,
+        "email": user.email,
+        "full_name": getattr(user, "full_name", None),
+        "bio": getattr(user, "bio", None),
+        "phone": getattr(user, "phone", None),
+        "profile_picture": getattr(user, "profile_picture", None)
+    }
+
 @router.patch("/{user_id}/profile", response_model=schemas.UserOut)
 def update_profile(user_id: int, profile: schemas.UserUpdate, db: Session = Depends(database.get_db), current_user=Depends(get_current_user)):
     if current_user.id != user_id:
@@ -28,6 +59,15 @@ def update_profile(user_id: int, profile: schemas.UserUpdate, db: Session = Depe
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+@router.post("/{user_id}/change-password")
+def change_password(user_id: int, passwords: schemas.ChangePassword, db: Session = Depends(database.get_db), current_user=Depends(get_current_user)):
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to change this password")
+    success = crud.change_user_password(db, user_id, passwords.old_password, passwords.new_password)
+    if not success:
+        raise HTTPException(status_code=400, detail="Old password is incorrect")
+    return {"message": "Password changed successfully"}
 
 @router.post("/{user_id}/upload-profile-picture", response_model=schemas.ProfilePictureUpload)
 def upload_profile_picture(user_id: int, file: UploadFile = File(...), db: Session = Depends(database.get_db), current_user=Depends(get_current_user)):

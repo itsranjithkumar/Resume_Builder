@@ -18,6 +18,10 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class ChangePassword(BaseModel):
+    old_password: str
+    new_password: str
+
 class ResumeCreate(BaseModel):
     name: str
     summary: str
@@ -25,6 +29,9 @@ class ResumeCreate(BaseModel):
     experience: str
     education: str
     projects: str
+    achievements: str  # New field
+    strengths: str     # New field
+    references: str    # New field
     contact: str
     title: str  # Optional: for backward compatibility
     content: str  # Optional: for backward compatibility
@@ -37,6 +44,9 @@ class ResumeOut(BaseModel):
     experience: str
     education: str
     projects: str
+    achievements: str  # New field
+    strengths: str     # New field
+    references: str    # New field
     contact: str
     title: str  # Optional: for backward compatibility
     content: str  # Optional: for backward compatibility
@@ -54,7 +64,5 @@ class UserOut(BaseModel):
     profile_picture: str | None = None
 
     model_config = {
-        'populate_by_name': True,
-        'from_attributes': True,
-        'exclude_none': True
+        "from_attributes": True
     }
