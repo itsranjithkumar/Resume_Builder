@@ -1,6 +1,5 @@
 "use client"
-import { useState, useRef } from "react"
-import type React from "react"
+import React, { useState, useRef } from "react"
 
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -17,84 +16,141 @@ export default function CreateResume() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // State for section visibility
+  // Update the visibleSections state to disable strengths and references by default
   const [visibleSections, setVisibleSections] = useState({
-    strengths: true,
+    strengths: false,
     achievements: true,
-    references: true,
+    references: false,
     projects: true,
   })
 
   // State for all fields
-  const [personal, setPersonal] = useState({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
-    address: "",
-    title: "",
-    linkedin: "",
-    summary: "",
-    profileImage: "",
-    profileImageFile: null as File | null,
-  })
+  // Load form state from localStorage if available
+  function loadFormState() {
+    try {
+      const saved = localStorage.getItem("resumeFormState")
+      if (!saved) return null
+      return JSON.parse(saved)
+    } catch {
+      return null
+    }
+  }
+  const savedState = typeof window !== "undefined" ? loadFormState() : null
 
-  const [experience, setExperience] = useState([
-    {
-      company: "",
-      role: "",
-      startDate: "",
-      endDate: "",
-      location: "",
-      details: [""],
-    },
-  ])
-
-  const [education, setEducation] = useState([
-    {
-      school: "",
-      degree: "",
-      startDate: "",
-      endDate: "",
-      location: "",
-    },
-  ])
-
-  const [skills, setSkills] = useState([""])
-
-  const [projects, setProjects] = useState([
-    {
-      name: "",
-      description: "",
-    },
-  ])
-
-  const [achievements, setAchievements] = useState([
-    {
+  const [personal, setPersonal] = useState(
+    savedState?.personal || {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      address: "",
       title: "",
-      description: "",
+      linkedin: "",
+      summary: "",
+      profileImage: "",
+      profileImageFile: null as File | null,
     },
-  ])
+  )
 
-  const [strengths, setStrengths] = useState([
-    {
-      title: "",
-      description: "",
+  const [experience, setExperience] = useState(
+    savedState?.experience || [
+      {
+        company: "",
+        role: "",
+        startDate: "",
+        endDate: "",
+        location: "",
+        details: [""],
+      },
+    ],
+  )
+
+  const [education, setEducation] = useState(
+    savedState?.education || [
+      {
+        school: "",
+        degree: "",
+        startDate: "",
+        endDate: "",
+        location: "",
+      },
+    ],
+  )
+
+  // Update the skills state to support categories
+  const [skills, setSkills] = useState(
+    savedState?.skills || {
+      frontend: [""],
+      backend: [""],
+      databases: [""],
+      other: [""],
     },
-  ])
+  )
 
-  const [references, setReferences] = useState([
-    { name: "", title: "", company: "", phone: "", email: "" },
-    { name: "", title: "", company: "", phone: "", email: "" },
-  ])
+  // Update the achievements state to include links
+  const [achievements, setAchievements] = useState(
+    savedState?.achievements || [
+      {
+        title: "",
+        description: "",
+        link: "",
+      },
+    ],
+  )
+
+  const [strengths, setStrengths] = useState(
+    savedState?.strengths || [
+      {
+        title: "",
+        description: "",
+      },
+    ],
+  )
+
+  const [references, setReferences] = useState(
+    savedState?.references || [
+      { name: "", title: "", company: "", phone: "", email: "" },
+      { name: "", title: "", company: "", phone: "", email: "" },
+    ],
+  )
+
+  const [projects, setProjects] = useState(
+    savedState?.projects || [
+      {
+        name: "",
+        description: "",
+      },
+    ],
+  )
+
+  // Save form state to localStorage on every change
+  function saveFormState(newState: any) {
+    try {
+      localStorage.setItem("resumeFormState", JSON.stringify(newState))
+    } catch {}
+  }
+
+  // Use effects to persist changes
+  React.useEffect(() => {
+    saveFormState({ personal, experience, education, skills, projects, achievements, strengths, references })
+  }, [personal, experience, education, skills, projects, achievements, strengths, references])
 
   // Handle file upload for profile image
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
-      const imageUrl = URL.createObjectURL(file)
+      // Convert image to base64 for persistence
+      const toBase64 = (file: File) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.readAsDataURL(file)
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = (error) => reject(error)
+        })
+      const imageBase64 = await toBase64(file)
       setPersonal({
         ...personal,
-        profileImage: imageUrl,
+        profileImage: imageBase64,
         profileImageFile: file,
       })
     }
@@ -115,8 +171,12 @@ export default function CreateResume() {
     setEducation([...education, { school: "", degree: "", startDate: "", endDate: "", location: "" }])
   }
 
-  const addSkill = () => {
-    setSkills([...skills, ""])
+  // Replace the addSkill function with category-based skill functions
+  const addSkill = (category: string) => {
+    setSkills((prevSkills) => ({
+      ...prevSkills,
+      [category]: [...prevSkills[category], ""],
+    }))
   }
 
   const addProject = () => {
@@ -124,7 +184,7 @@ export default function CreateResume() {
   }
 
   const addAchievement = () => {
-    setAchievements([...achievements, { title: "", description: "" }])
+    setAchievements([...achievements, { title: "", description: "", link: "" }])
   }
 
   const addStrength = () => {
@@ -140,49 +200,112 @@ export default function CreateResume() {
 
   // Handle removing items
   const removeExperience = (index: number) => {
-    setExperience(experience.filter((_, i) => i !== index))
+    setExperience(experience.filter((_: any, i: number) => i !== index))
   }
 
   const removeEducation = (index: number) => {
-    setEducation(education.filter((_, i) => i !== index))
+    setEducation(education.filter((_: any, i: number) => i !== index))
   }
 
-  const removeSkill = (index: number) => {
-    setSkills(skills.filter((_, i) => i !== index))
+  // Replace the removeSkill function with category-based skill removal
+  const removeSkill = (category: string, index: number) => {
+    setSkills((prevSkills) => ({
+      ...prevSkills,
+      [category]: prevSkills[category].filter((_, i) => i !== index),
+    }))
   }
 
   const removeProject = (index: number) => {
-    setProjects(projects.filter((_, i) => i !== index))
+    setProjects(projects.filter((_: any, i: number) => i !== index))
   }
 
   const removeAchievement = (index: number) => {
-    setAchievements(achievements.filter((_, i) => i !== index))
+    setAchievements(achievements.filter((_: any, i: number) => i !== index))
   }
 
   const removeStrength = (index: number) => {
-    setStrengths(strengths.filter((_, i) => i !== index))
+    setStrengths(strengths.filter((_: any, i: number) => i !== index))
   }
 
   const removeExperienceDetail = (expIndex: number, detailIndex: number) => {
     const updatedExperience = [...experience]
-    updatedExperience[expIndex].details = updatedExperience[expIndex].details.filter((_, i) => i !== detailIndex)
+    updatedExperience[expIndex].details = updatedExperience[expIndex].details.filter(
+      (_: any, i: number) => i !== detailIndex,
+    )
     setExperience(updatedExperience)
   }
 
-  function handleGenerate(e: React.FormEvent) {
+  async function handleGenerate(e: React.FormEvent) {
     e.preventDefault()
-    const resumeData = {
-      personal,
-      experience,
-      education,
-      skills,
-      projects: visibleSections.projects ? projects : [],
-      achievements: visibleSections.achievements ? achievements : [],
-      strengths: visibleSections.strengths ? strengths : [],
-      references: visibleSections.references ? references : [],
-      visibleSections,
+    // Prepare data for backend according to ResumeCreate schema
+    // Flatten and join arrays/objects as needed
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
+    if (!token) {
+      alert("You must be logged in to save your resume.")
+      return
     }
-    router.push("/dashboard/resume-preview?data=" + encodeURIComponent(JSON.stringify(resumeData)))
+    // Compose name and contact
+    const name = `${personal.firstName} ${personal.lastName}`.trim()
+    const contact = `${personal.email}, ${personal.phone}, ${personal.address}`
+    // Convert arrays/objects to string (JSON or joined)
+    // Replace the skillsStr line in handleGenerate with:
+    const skillsStr = JSON.stringify(skills)
+    const experienceStr = JSON.stringify(experience)
+    const educationStr = JSON.stringify(education)
+    const projectsStr = JSON.stringify(visibleSections.projects ? projects : [])
+    const achievementsStr = JSON.stringify(visibleSections.achievements ? achievements : [])
+    const strengthsStr = JSON.stringify(visibleSections.strengths ? strengths : [])
+    const referencesStr = JSON.stringify(visibleSections.references ? references : [])
+    // Prepare payload for backend
+    const payload = {
+      name,
+      summary: personal.summary,
+      skills: skillsStr,
+      experience: experienceStr,
+      education: educationStr,
+      projects: projectsStr,
+      achievements: achievementsStr,
+      strengths: strengthsStr,
+      references: referencesStr,
+      contact,
+      title: personal.title,
+      profileImage: personal.profileImage, // Save base64 image
+      content: "", // Optional, not used in UI
+    }
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/resumes/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        if (res.status === 401) {
+          alert("Session expired or not authenticated. Please log in again.")
+          localStorage.removeItem("token")
+          router.push("/login")
+          return
+        }
+        const msg = await res.text()
+        throw new Error(msg || "Failed to save resume")
+      }
+      const newResume = await res.json()
+      // Do NOT clear localStorage here; keep form state for back navigation
+      // localStorage.removeItem('resumeFormState');
+      // Optionally, pass the backend resume ID to the preview page for fetching
+      router.push(`/dashboard/resume-preview?resume_id=${newResume.resume_id}`)
+    } catch (err: any) {
+      if (err.message.includes("401")) {
+        alert("Session expired or not authenticated. Please log in again.")
+        localStorage.removeItem("token")
+        router.push("/login")
+      } else {
+        alert("Error saving resume: " + (err?.message || "Unknown error"))
+      }
+      console.error("Resume save error:", err)
+    }
   }
 
   return (
@@ -196,7 +319,7 @@ export default function CreateResume() {
             <TabsTrigger value="education">Education</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="achievements">Achievements</TabsTrigger>
+            <TabsTrigger value="achievements">Certificates</TabsTrigger>
             <TabsTrigger value="strengths">Strengths</TabsTrigger>
             <TabsTrigger value="references">References</TabsTrigger>
           </TabsList>
@@ -212,7 +335,7 @@ export default function CreateResume() {
                     <Input
                       placeholder="First Name"
                       value={personal.firstName}
-                      onChange={(e) => setPersonal((p) => ({ ...p, firstName: e.target.value }))}
+                      onChange={(e) => setPersonal((p: any) => ({ ...p, firstName: e.target.value }))}
                       required
                     />
                   </div>
@@ -221,7 +344,7 @@ export default function CreateResume() {
                     <Input
                       placeholder="Last Name"
                       value={personal.lastName}
-                      onChange={(e) => setPersonal((p) => ({ ...p, lastName: e.target.value }))}
+                      onChange={(e) => setPersonal((p: any) => ({ ...p, lastName: e.target.value }))}
                       required
                     />
                   </div>
@@ -230,7 +353,7 @@ export default function CreateResume() {
                     <Input
                       placeholder="e.g. Full Stack Developer"
                       value={personal.title}
-                      onChange={(e) => setPersonal((p) => ({ ...p, title: e.target.value }))}
+                      onChange={(e) => setPersonal((p: any) => ({ ...p, title: e.target.value }))}
                       required
                     />
                   </div>
@@ -239,7 +362,7 @@ export default function CreateResume() {
                     <Input
                       placeholder="e.g. +91 98765 43210"
                       value={personal.phone}
-                      onChange={(e) => setPersonal((p) => ({ ...p, phone: e.target.value }))}
+                      onChange={(e) => setPersonal((p: any) => ({ ...p, phone: e.target.value }))}
                       required
                     />
                   </div>
@@ -249,7 +372,7 @@ export default function CreateResume() {
                       placeholder="your.email@example.com"
                       type="email"
                       value={personal.email}
-                      onChange={(e) => setPersonal((p) => ({ ...p, email: e.target.value }))}
+                      onChange={(e) => setPersonal((p: any) => ({ ...p, email: e.target.value }))}
                       required
                     />
                   </div>
@@ -258,7 +381,7 @@ export default function CreateResume() {
                     <Input
                       placeholder="www.linkedin.com/in/your-profile"
                       value={personal.linkedin}
-                      onChange={(e) => setPersonal((p) => ({ ...p, linkedin: e.target.value }))}
+                      onChange={(e) => setPersonal((p: any) => ({ ...p, linkedin: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2 col-span-2">
@@ -266,7 +389,7 @@ export default function CreateResume() {
                     <Input
                       placeholder="City, State"
                       value={personal.address}
-                      onChange={(e) => setPersonal((p) => ({ ...p, address: e.target.value }))}
+                      onChange={(e) => setPersonal((p: any) => ({ ...p, address: e.target.value }))}
                       required
                     />
                   </div>
@@ -276,7 +399,7 @@ export default function CreateResume() {
                       <Input
                         placeholder="https://example.com/your-image.jpg"
                         value={personal.profileImage}
-                        onChange={(e) => setPersonal((p) => ({ ...p, profileImage: e.target.value }))}
+                        onChange={(e) => setPersonal((p: any) => ({ ...p, profileImage: e.target.value }))}
                         className="flex-1"
                       />
                       <span className="text-sm text-gray-500">OR</span>
@@ -312,26 +435,17 @@ export default function CreateResume() {
                     <Textarea
                       placeholder="Brief overview of your professional background and key strengths"
                       value={personal.summary}
-                      onChange={(e) => setPersonal((p) => ({ ...p, summary: e.target.value }))}
+                      onChange={(e) => setPersonal((p: any) => ({ ...p, summary: e.target.value }))}
                       className="min-h-[100px]"
                       required
                     />
                   </div>
                 </div>
 
+                {/* Update the Personal section to remove strength and reference options */}
                 <div className="mt-6 border-t pt-4">
                   <h3 className="font-medium mb-2">Optional Sections</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="show-strengths"
-                        checked={visibleSections.strengths}
-                        onCheckedChange={(checked: boolean) =>
-                          setVisibleSections({ ...visibleSections, strengths: checked === true })
-                        }
-                      />
-                      <Label htmlFor="show-strengths">Include Strengths Section</Label>
-                    </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="show-achievements"
@@ -340,17 +454,7 @@ export default function CreateResume() {
                           setVisibleSections({ ...visibleSections, achievements: checked === true })
                         }
                       />
-                      <Label htmlFor="show-achievements">Include Key Achievements Section</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="show-references"
-                        checked={visibleSections.references}
-                        onCheckedChange={(checked: boolean) =>
-                          setVisibleSections({ ...visibleSections, references: checked === true })
-                        }
-                      />
-                      <Label htmlFor="show-references">Include References Section</Label>
+                      <Label htmlFor="show-achievements">Include Certificates Section</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
@@ -379,127 +483,139 @@ export default function CreateResume() {
                   </Button>
                 </div>
 
-                {experience.map((exp, idx) => (
-                  <div key={idx} className="mb-8 border-b pb-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-bold">Position {idx + 1}</h3>
-                      {idx > 0 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeExperience(idx)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" /> Remove
-                        </Button>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Company/Organization</label>
-                        <Input
-                          placeholder="Company Name"
-                          value={exp.company}
-                          onChange={(e) =>
-                            setExperience((exps) =>
-                              exps.map((ex, i) => (i === idx ? { ...ex, company: e.target.value } : ex)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Job Title</label>
-                        <Input
-                          placeholder="Your Role"
-                          value={exp.role}
-                          onChange={(e) =>
-                            setExperience((exps) =>
-                              exps.map((ex, i) => (i === idx ? { ...ex, role: e.target.value } : ex)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Start Date</label>
-                        <Input
-                          placeholder="e.g. Jan 2020"
-                          value={exp.startDate}
-                          onChange={(e) =>
-                            setExperience((exps) =>
-                              exps.map((ex, i) => (i === idx ? { ...ex, startDate: e.target.value } : ex)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">End Date</label>
-                        <Input
-                          placeholder="e.g. Present"
-                          value={exp.endDate}
-                          onChange={(e) =>
-                            setExperience((exps) =>
-                              exps.map((ex, i) => (i === idx ? { ...ex, endDate: e.target.value } : ex)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2 col-span-2">
-                        <label className="text-sm font-medium">Location</label>
-                        <Input
-                          placeholder="City, State"
-                          value={exp.location}
-                          onChange={(e) =>
-                            setExperience((exps) =>
-                              exps.map((ex, i) => (i === idx ? { ...ex, location: e.target.value } : ex)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <label className="text-sm font-medium">Key Responsibilities & Achievements</label>
-                        <Button type="button" variant="outline" size="sm" onClick={() => addExperienceDetail(idx)}>
-                          <PlusCircle className="h-4 w-4 mr-1" /> Add Bullet
-                        </Button>
+                {experience.map(
+                  (
+                    exp: {
+                      company: string | number | readonly string[] | undefined
+                      role: string | number | readonly string[] | undefined
+                      startDate: string | number | readonly string[] | undefined
+                      endDate: string | number | readonly string[] | undefined
+                      location: string | number | readonly string[] | undefined
+                      details: any[]
+                    },
+                    idx: React.Key | null | undefined,
+                  ) => (
+                    <div key={idx} className="mb-8 border-b pb-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold">Position {idx + 1}</h3>
+                        {idx > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeExperience(idx)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" /> Remove
+                          </Button>
+                        )}
                       </div>
 
-                      {exp.details.map((detail, detailIdx) => (
-                        <div key={detailIdx} className="flex gap-2 items-center">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Company/Organization</label>
                           <Input
-                            placeholder="Describe your achievement or responsibility"
-                            value={detail}
-                            onChange={(e) => {
-                              const updatedExperience = [...experience]
-                              updatedExperience[idx].details[detailIdx] = e.target.value
-                              setExperience(updatedExperience)
-                            }}
+                            placeholder="Company Name"
+                            value={exp.company}
+                            onChange={(e) =>
+                              setExperience((exps) =>
+                                exps.map((ex, i) => (i === idx ? { ...ex, company: e.target.value } : ex)),
+                              )
+                            }
                             required
                           />
-                          {detailIdx > 0 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeExperienceDetail(idx, detailIdx)}
-                              className="text-red-500 hover:text-red-700 p-2"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
                         </div>
-                      ))}
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Job Title</label>
+                          <Input
+                            placeholder="Your Role"
+                            value={exp.role}
+                            onChange={(e) =>
+                              setExperience((exps) =>
+                                exps.map((ex, i) => (i === idx ? { ...ex, role: e.target.value } : ex)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Start Date</label>
+                          <Input
+                            placeholder="e.g. Jan 2020"
+                            value={exp.startDate}
+                            onChange={(e) =>
+                              setExperience((exps) =>
+                                exps.map((ex, i) => (i === idx ? { ...ex, startDate: e.target.value } : ex)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">End Date</label>
+                          <Input
+                            placeholder="e.g. Present"
+                            value={exp.endDate}
+                            onChange={(e) =>
+                              setExperience((exps) =>
+                                exps.map((ex, i) => (i === idx ? { ...ex, endDate: e.target.value } : ex)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <label className="text-sm font-medium">Location</label>
+                          <Input
+                            placeholder="City, State"
+                            value={exp.location}
+                            onChange={(e) =>
+                              setExperience((exps) =>
+                                exps.map((ex, i) => (i === idx ? { ...ex, location: e.target.value } : ex)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <label className="text-sm font-medium">Key Responsibilities & Achievements</label>
+                          <Button type="button" variant="outline" size="sm" onClick={() => addExperienceDetail(idx)}>
+                            <PlusCircle className="h-4 w-4 mr-1" /> Add Bullet
+                          </Button>
+                        </div>
+
+                        {exp.details.map((detail, detailIdx) => (
+                          <div key={detailIdx} className="flex gap-2 items-center">
+                            <Input
+                              placeholder="Describe your achievement or responsibility"
+                              value={detail}
+                              onChange={(e) => {
+                                const updatedExperience = [...experience]
+                                updatedExperience[idx].details[detailIdx] = e.target.value
+                                setExperience(updatedExperience)
+                              }}
+                              required
+                            />
+                            {detailIdx > 0 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeExperienceDetail(idx, detailIdx)}
+                                className="text-red-500 hover:text-red-700 p-2"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -552,8 +668,8 @@ export default function CreateResume() {
                           placeholder="e.g. Bachelor of Science"
                           value={edu.degree}
                           onChange={(e) =>
-                            setEducation((edus) =>
-                              edus.map((ed, i) => (i === idx ? { ...ed, degree: e.target.value } : ed)),
+                            setEducation((edus: any[]) =>
+                              edus.map((ed: any, i: any) => (i === idx ? { ...ed, degree: e.target.value } : ed)),
                             )
                           }
                           required
@@ -591,7 +707,7 @@ export default function CreateResume() {
                           placeholder="City, State"
                           value={edu.location}
                           onChange={(e) =>
-                            setEducation((edus) =>
+                            setEducation((edus: any[]) =>
                               edus.map((ed, i) => (i === idx ? { ...ed, location: e.target.value } : ed)),
                             )
                           }
@@ -609,35 +725,154 @@ export default function CreateResume() {
           <TabsContent value="skills">
             <Card>
               <CardContent className="pt-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Technical Skills</h2>
-                  <Button type="button" variant="outline" size="sm" onClick={addSkill}>
-                    <PlusCircle className="h-4 w-4 mr-2" /> Add Skill
-                  </Button>
+                <h2 className="text-xl font-semibold mb-4">Technical Skills</h2>
+
+                {/* Frontend Skills */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">Frontend Technologies</h3>
+                    <Button type="button" variant="outline" size="sm" onClick={() => addSkill("frontend")}>
+                      <PlusCircle className="h-4 w-4 mr-2" /> Add Frontend Skill
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {skills.frontend.map((skill, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <Input
+                          placeholder="e.g. React.js, HTML5, CSS3"
+                          value={skill}
+                          onChange={(e) => {
+                            const updatedSkills = { ...skills }
+                            updatedSkills.frontend[idx] = e.target.value
+                            setSkills(updatedSkills)
+                          }}
+                          required={idx === 0}
+                        />
+                        {idx > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSkill("frontend", idx)}
+                            className="text-red-500 hover:text-red-700 p-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  {skills.map((skill, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <Input
-                        placeholder="e.g. JavaScript, Project Management, Data Analysis"
-                        value={skill}
-                        onChange={(e) => setSkills((skills) => skills.map((s, i) => (i === idx ? e.target.value : s)))}
-                        required
-                      />
-                      {idx > 0 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeSkill(idx)}
-                          className="text-red-500 hover:text-red-700 p-2"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                {/* Backend Skills */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">Backend Technologies</h3>
+                    <Button type="button" variant="outline" size="sm" onClick={() => addSkill("backend")}>
+                      <PlusCircle className="h-4 w-4 mr-2" /> Add Backend Skill
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {skills.backend.map((skill, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <Input
+                          placeholder="e.g. Node.js, Express.js, FastAPI"
+                          value={skill}
+                          onChange={(e) => {
+                            const updatedSkills = { ...skills }
+                            updatedSkills.backend[idx] = e.target.value
+                            setSkills(updatedSkills)
+                          }}
+                          required={idx === 0}
+                        />
+                        {idx > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSkill("backend", idx)}
+                            className="text-red-500 hover:text-red-700 p-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Database Skills */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">Databases</h3>
+                    <Button type="button" variant="outline" size="sm" onClick={() => addSkill("databases")}>
+                      <PlusCircle className="h-4 w-4 mr-2" /> Add Database Skill
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {skills.databases.map((skill, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <Input
+                          placeholder="e.g. MongoDB, MySQL, PostgreSQL"
+                          value={skill}
+                          onChange={(e) => {
+                            const updatedSkills = { ...skills }
+                            updatedSkills.databases[idx] = e.target.value
+                            setSkills(updatedSkills)
+                          }}
+                          required={idx === 0}
+                        />
+                        {idx > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSkill("databases", idx)}
+                            className="text-red-500 hover:text-red-700 p-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Other Skills */}
+                <div className="mb-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">Other Skills</h3>
+                    <Button type="button" variant="outline" size="sm" onClick={() => addSkill("other")}>
+                      <PlusCircle className="h-4 w-4 mr-2" /> Add Other Skill
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    {skills.other.map((skill, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <Input
+                          placeholder="e.g. Git, Docker, AWS"
+                          value={skill}
+                          onChange={(e) => {
+                            const updatedSkills = { ...skills }
+                            updatedSkills.other[idx] = e.target.value
+                            setSkills(updatedSkills)
+                          }}
+                          required={idx === 0}
+                        />
+                        {idx > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeSkill("other", idx)}
+                            className="text-red-500 hover:text-red-700 p-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -654,54 +889,62 @@ export default function CreateResume() {
                   </Button>
                 </div>
 
-                {projects.map((project, idx) => (
-                  <div key={idx} className="mb-6 border-b pb-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-bold">Project {idx + 1}</h3>
-                      {idx > 0 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeProject(idx)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" /> Remove
-                        </Button>
-                      )}
-                    </div>
+                {projects.map(
+                  (
+                    project: {
+                      name: string | number | readonly string[] | undefined
+                      description: string | number | readonly string[] | undefined
+                    },
+                    idx: React.Key | null | undefined,
+                  ) => (
+                    <div key={idx} className="mb-6 border-b pb-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold">Project {idx + 1}</h3>
+                        {idx > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeProject(idx)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" /> Remove
+                          </Button>
+                        )}
+                      </div>
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Project Name</label>
-                        <Input
-                          placeholder="Project Title"
-                          value={project.name}
-                          onChange={(e) =>
-                            setProjects((projects) =>
-                              projects.map((p, i) => (i === idx ? { ...p, name: e.target.value } : p)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Description</label>
-                        <Textarea
-                          placeholder="Brief description of the project and your role"
-                          value={project.description}
-                          onChange={(e) =>
-                            setProjects((projects) =>
-                              projects.map((p, i) => (i === idx ? { ...p, description: e.target.value } : p)),
-                            )
-                          }
-                          className="min-h-[80px]"
-                          required
-                        />
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Project Name</label>
+                          <Input
+                            placeholder="Project Title"
+                            value={project.name}
+                            onChange={(e) =>
+                              setProjects((projects: any[]) =>
+                                projects.map((p: any, i: any) => (i === idx ? { ...p, name: e.target.value } : p)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Description</label>
+                          <Textarea
+                            placeholder="Brief description of the project and your role"
+                            value={project.description}
+                            onChange={(e) =>
+                              setProjects((projects: any[]) =>
+                                projects.map((p, i) => (i === idx ? { ...p, description: e.target.value } : p)),
+                              )
+                            }
+                            className="min-h-[80px]"
+                            required
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -711,60 +954,81 @@ export default function CreateResume() {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Key Achievements</h2>
+                  <h2 className="text-xl font-semibold">Certificates</h2>
                   <Button type="button" variant="outline" size="sm" onClick={addAchievement}>
-                    <PlusCircle className="h-4 w-4 mr-2" /> Add Achievement
+                    <PlusCircle className="h-4 w-4 mr-2" /> Add Certificate
                   </Button>
                 </div>
 
-                {achievements.map((achievement, idx) => (
-                  <div key={idx} className="mb-6 border-b pb-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-bold">Achievement {idx + 1}</h3>
-                      {idx > 0 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeAchievement(idx)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" /> Remove
-                        </Button>
-                      )}
-                    </div>
+                {achievements.map(
+                  (
+                    achievement: {
+                      title: string | number | readonly string[] | undefined
+                      description: string | number | readonly string[] | undefined
+                      link?: string | number | readonly string[] | undefined
+                    },
+                    idx: React.Key | null | undefined,
+                  ) => (
+                    <div key={idx} className="mb-6 border-b pb-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold">Certificate {idx + 1}</h3>
+                        {idx > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAchievement(idx)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" /> Remove
+                          </Button>
+                        )}
+                      </div>
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Title</label>
-                        <Input
-                          placeholder="e.g. Cost Saving of $2M"
-                          value={achievement.title}
-                          onChange={(e) =>
-                            setAchievements((achievements) =>
-                              achievements.map((a, i) => (i === idx ? { ...a, title: e.target.value } : a)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Description</label>
-                        <Textarea
-                          placeholder="Describe how you achieved this"
-                          value={achievement.description}
-                          onChange={(e) =>
-                            setAchievements((achievements) =>
-                              achievements.map((a, i) => (i === idx ? { ...a, description: e.target.value } : a)),
-                            )
-                          }
-                          className="min-h-[80px]"
-                          required
-                        />
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Title</label>
+                          <Input
+                            placeholder="e.g. AWS Certified Solutions Architect"
+                            value={achievement.title}
+                            onChange={(e) =>
+                              setAchievements((achievements: any[]) =>
+                                achievements.map((a, i) => (i === idx ? { ...a, title: e.target.value } : a)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Description</label>
+                          <Textarea
+                            placeholder="e.g. Issued by Amazon Web Services, May 2023"
+                            value={achievement.description}
+                            onChange={(e) =>
+                              setAchievements((achievements: any[]) =>
+                                achievements.map((a, i) => (i === idx ? { ...a, description: e.target.value } : a)),
+                              )
+                            }
+                            className="min-h-[80px]"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Certificate Link (Optional)</label>
+                          <Input
+                            placeholder="e.g. https://www.credential.net/your-certificate"
+                            value={achievement.link}
+                            onChange={(e) =>
+                              setAchievements((achievements: any[]) =>
+                                achievements.map((a, i) => (i === idx ? { ...a, link: e.target.value } : a)),
+                              )
+                            }
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -780,54 +1044,64 @@ export default function CreateResume() {
                   </Button>
                 </div>
 
-                {strengths.map((strength, idx) => (
-                  <div key={idx} className="mb-6 border-b pb-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-bold">Strength {idx + 1}</h3>
-                      {idx > 0 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeStrength(idx)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" /> Remove
-                        </Button>
-                      )}
-                    </div>
+                {strengths.map(
+                  (
+                    strength: {
+                      title: string | number | readonly string[] | undefined
+                      description: string | number | readonly string[] | undefined
+                    },
+                    idx: React.Key | null | undefined,
+                  ) => (
+                    <div key={idx} className="mb-6 border-b pb-4">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold">Strength {idx + 1}</h3>
+                        {idx > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeStrength(idx)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" /> Remove
+                          </Button>
+                        )}
+                      </div>
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Title</label>
-                        <Input
-                          placeholder="e.g. Critical Thinking"
-                          value={strength.title}
-                          onChange={(e) =>
-                            setStrengths((strengths) =>
-                              strengths.map((s, i) => (i === idx ? { ...s, title: e.target.value } : s)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Description</label>
-                        <Textarea
-                          placeholder="Describe this strength"
-                          value={strength.description}
-                          onChange={(e) =>
-                            setStrengths((strengths) =>
-                              strengths.map((s, i) => (i === idx ? { ...s, description: e.target.value } : s)),
-                            )
-                          }
-                          className="min-h-[80px]"
-                          required
-                        />
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Title</label>
+                          <Input
+                            placeholder="e.g. Critical Thinking"
+                            value={strength.title}
+                            onChange={(e) =>
+                              setStrengths((strengths: any[]) =>
+                                strengths.map((s, i) => (i === idx ? { ...s, title: e.target.value } : s)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Description</label>
+                          <Textarea
+                            placeholder="Describe this strength"
+                            value={strength.description}
+                            onChange={(e) =>
+                              setStrengths((strengths: any[]) =>
+                                strengths.map((s: any, i: any) =>
+                                  i === idx ? { ...s, description: e.target.value } : s,
+                                ),
+                              )
+                            }
+                            className="min-h-[80px]"
+                            required
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -839,79 +1113,90 @@ export default function CreateResume() {
                 <h2 className="text-xl font-semibold mb-4">References</h2>
                 <p className="mb-4 text-muted-foreground">Please list two (2) professional references.</p>
 
-                {references.map((ref, idx) => (
-                  <div key={idx} className="mb-8 border-b pb-6">
-                    <h3 className="font-bold mb-4">Reference {idx + 1}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Full Name</label>
-                        <Input
-                          placeholder="Full Name"
-                          value={ref.name}
-                          onChange={(e) =>
-                            setReferences((refs) =>
-                              refs.map((r, i) => (i === idx ? { ...r, name: e.target.value } : r)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Job Title</label>
-                        <Input
-                          placeholder="e.g. Head of Engineering"
-                          value={ref.title}
-                          onChange={(e) =>
-                            setReferences((refs) =>
-                              refs.map((r, i) => (i === idx ? { ...r, title: e.target.value } : r)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Company</label>
-                        <Input
-                          placeholder="Company Name"
-                          value={ref.company}
-                          onChange={(e) =>
-                            setReferences((refs) =>
-                              refs.map((r, i) => (i === idx ? { ...r, company: e.target.value } : r)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Phone Number</label>
-                        <Input
-                          placeholder="Phone Number"
-                          value={ref.phone}
-                          onChange={(e) =>
-                            setReferences((refs) =>
-                              refs.map((r, i) => (i === idx ? { ...r, phone: e.target.value } : r)),
-                            )
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2 col-span-2">
-                        <label className="text-sm font-medium">Email</label>
-                        <Input
-                          placeholder="Email Address"
-                          type="email"
-                          value={ref.email}
-                          onChange={(e) =>
-                            setReferences((refs) =>
-                              refs.map((r, i) => (i === idx ? { ...r, email: e.target.value } : r)),
-                            )
-                          }
-                          required
-                        />
+                {references.map(
+                  (
+                    ref: {
+                      name: string | number | readonly string[] | undefined
+                      title: string | number | readonly string[] | undefined
+                      company: string | number | readonly string[] | undefined
+                      phone: string | number | readonly string[] | undefined
+                      email: string | number | readonly string[] | undefined
+                    },
+                    idx: React.Key | null | undefined,
+                  ) => (
+                    <div key={idx} className="mb-8 border-b pb-6">
+                      <h3 className="font-bold mb-4">Reference {idx + 1}</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Full Name</label>
+                          <Input
+                            placeholder="Full Name"
+                            value={ref.name}
+                            onChange={(e) =>
+                              setReferences((refs: any[]) =>
+                                refs.map((r, i) => (i === idx ? { ...r, name: e.target.value } : r)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Job Title</label>
+                          <Input
+                            placeholder="e.g. Head of Engineering"
+                            value={ref.title}
+                            onChange={(e) =>
+                              setReferences((refs: any[]) =>
+                                refs.map((r, i) => (i === idx ? { ...r, title: e.target.value } : r)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Company</label>
+                          <Input
+                            placeholder="Company Name"
+                            value={ref.company}
+                            onChange={(e) =>
+                              setReferences((refs: any[]) =>
+                                refs.map((r, i) => (i === idx ? { ...r, company: e.target.value } : r)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Phone Number</label>
+                          <Input
+                            placeholder="Phone Number"
+                            value={ref.phone}
+                            onChange={(e) =>
+                              setReferences((refs: any[]) =>
+                                refs.map((r: any, i: any) => (i === idx ? { ...r, phone: e.target.value } : r)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2 col-span-2">
+                          <label className="text-sm font-medium">Email</label>
+                          <Input
+                            placeholder="Email Address"
+                            type="email"
+                            value={ref.email}
+                            onChange={(e) =>
+                              setReferences((refs: any[]) =>
+                                refs.map((r, i) => (i === idx ? { ...r, email: e.target.value } : r)),
+                              )
+                            }
+                            required
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </CardContent>
             </Card>
           </TabsContent>
