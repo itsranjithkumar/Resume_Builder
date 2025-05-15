@@ -35,7 +35,7 @@ class ResumeCreate(BaseModel):
     contact: str
     title: str  # Optional: for backward compatibility
     content: str  # Optional: for backward compatibility
-
+    profileImage: str | None = None  # base64 image
 class ResumeOut(BaseModel):
     resume_id: int
     name: str
@@ -51,6 +51,7 @@ class ResumeOut(BaseModel):
     title: str  # Optional: for backward compatibility
     content: str  # Optional: for backward compatibility
     user_id: int
+    profileImage: str | None = None  # base64 image
 
     class Config:
         orm_mode = True

@@ -21,6 +21,15 @@ def get_my_resumes(db: Session = Depends(database.get_db), current_user=Depends(
 def get_resumes(user_id: int, db: Session = Depends(database.get_db), offset: int = Query(0, ge=0), limit: int = Query(10, gt=0, le=100)):
     return crud.get_user_resumes(db, user_id, offset=offset, limit=limit)
 
+@router.get("/{resume_id}")
+def get_resume(resume_id: int, db: Session = Depends(database.get_db), current_user=Depends(get_current_user)):
+    resume = crud.get_resume(db, resume_id)
+    if not resume:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Resume not found")
+    # Optionally, you could check if the current_user is the owner of the resume here
+    return resume
+
 @router.patch("/{resume_id}")
 def update_resume(resume_id: int, resume: schemas.ResumeCreate, db: Session = Depends(database.get_db)):
     return crud.update_resume(db, resume_id, resume)

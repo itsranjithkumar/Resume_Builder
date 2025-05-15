@@ -60,6 +60,9 @@ def update_resume(db: Session, resume_id: int, resume: schemas.ResumeCreate):
     db.refresh(db_resume)
     return db_resume
 
+def get_resume(db: Session, resume_id: int):
+    return db.query(models.Resume).filter(models.Resume.resume_id == resume_id).first()
+
 def delete_resume(db: Session, resume_id: int):
     db_resume = db.query(models.Resume).filter(models.Resume.resume_id == resume_id).first()
     if not db_resume:

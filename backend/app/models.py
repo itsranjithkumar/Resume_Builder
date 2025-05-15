@@ -33,5 +33,6 @@ class Resume(Base):
     title = Column(String)  # Optional: for backward compatibility
     content = Column(Text)  # Optional: for backward compatibility
     user_id = Column(Integer, ForeignKey("users.id"))
+    profileImage = Column(Text, nullable=True)  # base64 image
 
     owner = relationship("User", back_populates="resumes")
