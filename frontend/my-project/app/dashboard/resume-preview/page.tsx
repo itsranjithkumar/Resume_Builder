@@ -1,18 +1,21 @@
 "use client"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download } from "lucide-react"
-import { useRouter } from "next/navigation"
 import {
-  type JSXElementConstructor,
-  type Key,
-  type ReactElement,
-  type ReactNode,
-  type ReactPortal,
-  useRef,
-} from "react"
-
-import { useEffect, useState } from "react"
+  ArrowLeft,
+  Download,
+  Phone,
+  Mail,
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  Award,
+  LinkIcon,
+  FolderKanban,
+  Code,
+} from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useRef, useEffect, useState } from "react"
 
 export default function ResumePreview() {
   const router = useRouter()
@@ -62,10 +65,8 @@ export default function ResumePreview() {
     }
   }, [resumeId, data])
 
-  // Update the parseBackendResume function to handle the new skills structure
   function parseBackendResume(data: any) {
     // Convert backend resume fields to frontend structure
-    // Most fields are JSON strings, except name, summary, skills, contact, etc.
     const [firstName, ...lastParts] = (data.name || "").split(" ")
     const lastName = lastParts.join(" ")
     const personal = {
@@ -77,7 +78,7 @@ export default function ResumePreview() {
       title: data.title || "",
       linkedin: "", // Not stored in backend
       summary: data.summary || "",
-      profileImage: data.profileImage || "", // Use base64 from backend if present
+      profileImage: data.profileImage || "",
       profileImageFile: null,
     }
 
@@ -110,13 +111,9 @@ export default function ResumePreview() {
       skills: parsedSkills,
       projects: safeParseJSON(data.projects) || [],
       achievements: safeParseJSON(data.achievements) || [],
-      strengths: safeParseJSON(data.strengths) || [],
-      references: safeParseJSON(data.references) || [],
       visibleSections: {
         projects: !!data.projects,
         achievements: !!data.achievements,
-        strengths: false,
-        references: false,
       },
     }
   }
@@ -129,7 +126,6 @@ export default function ResumePreview() {
     }
   }
 
-  // Update the handlePrint function to include the new styles for skills and certificates
   const handlePrint = () => {
     const content = resumeRef.current
     if (!content) return
@@ -141,7 +137,10 @@ export default function ResumePreview() {
     printDocument.write(`
   <html>
     <head>
-      <title>Resume - Print</title>
+      <title>Resume - ${resume?.personal?.firstName || ""} ${resume?.personal?.lastName || ""}</title>
+      <!-- Lucide Icons CDN -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css" />
+      <!-- Add system and fallback fonts for consistency -->
       <style>
         @page {
           size: A4;
@@ -156,58 +155,63 @@ export default function ResumePreview() {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
           color-adjust: exact !important;
-        }
-        body {
           font-family: Arial, sans-serif;
           color: #333;
           line-height: 1.5;
+          font-size: 12px;
         }
         .resume-container {
           width: 210mm;
           height: 297mm;
-          padding: 20mm;
+          padding: 15mm;
           margin: 0 auto;
           background: white;
           box-sizing: border-box;
           position: relative;
+          overflow: hidden;
         }
         .resume-content {
           width: 100%;
           height: 100%;
           box-sizing: border-box;
+          overflow: hidden;
         }
         h1 {
-          font-size: 28px;
+          font-size: 24px;
           margin-bottom: 4px;
           color: #333;
         }
         h2 {
-          font-size: 18px;
+          font-size: 16px;
           border-bottom: 1px solid #ddd;
           padding-bottom: 4px;
-          margin-top: 16px;
-          margin-bottom: 12px;
+          margin-top: 14px;
+          margin-bottom: 10px;
+          color: #2563eb;
         }
         h3 {
-          font-size: 16px;
+          font-size: 14px;
           margin-bottom: 4px;
-          margin-top: 12px;
+          margin-top: 10px;
+          color: #444;
         }
         p {
           margin: 4px 0;
+          font-size: 12px;
         }
         .contact-info {
           display: flex;
           flex-wrap: wrap;
-          gap: 12px;
-          margin-top: 8px;
+          gap: 10px;
+          margin-top: 6px;
+          font-size: 12px;
         }
         .contact-item {
           display: flex;
           align-items: center;
         }
         .section {
-          margin-bottom: 16px;
+          margin-bottom: 14px;
         }
         .flex {
           display: flex;
@@ -234,7 +238,7 @@ export default function ResumePreview() {
           align-items: center;
         }
         .mb-5 {
-          margin-bottom: 1.25rem;
+          margin-bottom: 1rem;
         }
         .mb-3 {
           margin-bottom: 0.75rem;
@@ -255,19 +259,19 @@ export default function ResumePreview() {
           font-weight: 500;
         }
         .text-gray-800 {
-          color: #1f2937;
+          color: #333;
         }
         .text-gray-700 {
-          color: #374151;
+          color: #444;
         }
         .text-gray-600 {
-          color: #4b5563;
+          color: #555;
         }
         .text-sm {
-          font-size: 0.875rem;
+          font-size: 12px;
         }
         .text-xs {
-          font-size: 0.75rem;
+          font-size: 10px;
         }
         .mx-2 {
           margin-left: 0.5rem;
@@ -306,7 +310,7 @@ export default function ResumePreview() {
           padding-bottom: 0.25rem;
         }
         .bg-gray-100 {
-          background-color: #f3f4f6;
+          background-color: #f5f5f5;
         }
         .rounded-md {
           border-radius: 0.375rem;
@@ -315,16 +319,16 @@ export default function ResumePreview() {
           border-bottom-width: 1px;
         }
         .border-gray-300 {
-          border-color: #d1d5db;
+          border-color: #ddd;
         }
         .pb-1 {
           padding-bottom: 0.25rem;
         }
-        .w-24 {
-          width: 6rem;
+        .w-20 {
+          width: 5rem;
         }
-        .h-24 {
-          height: 6rem;
+        .h-20 {
+          height: 5rem;
         }
         .rounded-full {
           border-radius: 9999px;
@@ -336,7 +340,7 @@ export default function ResumePreview() {
           border-width: 2px;
         }
         .border-gray-200 {
-          border-color: #e5e7eb;
+          border-color: #eee;
         }
         .flex-shrink-0 {
           flex-shrink: 0;
@@ -351,16 +355,16 @@ export default function ResumePreview() {
           object-fit: cover;
         }
         .text-4xl {
-          font-size: 2.25rem;
+          font-size: 24px;
         }
         .text-lg {
-          font-size: 1.125rem;
+          font-size: 14px;
         }
-        .text-cyan-500 {
-          color: #06b6d4;
+        .text-gray-500 {
+          color: #2563eb;
         }
-        .text-cyan-600 {
-          color: #0891b2;
+        .text-gray-600 {
+          color: #555;
         }
         .mt-3 {
           margin-top: 0.75rem;
@@ -372,11 +376,36 @@ export default function ResumePreview() {
           gap: 0.75rem;
         }
         a {
-          color: #0891b2;
+          color: #2563eb;
           text-decoration: none;
         }
         a:hover {
           text-decoration: underline;
+        }
+        .icon {
+          display: inline-block;
+          width: 14px;
+          height: 14px;
+          margin-right: 4px;
+          position: relative;
+          top: 2px;
+        }
+        ul {
+          margin-top: 4px;
+          margin-bottom: 8px;
+          padding-left: 20px;
+        }
+        li {
+          margin-bottom: 3px;
+          font-size: 12px;
+        }
+        .skill-tag {
+          display: inline-block;
+          background-color: #f5f5f5;
+          padding: 2px 8px;
+          margin: 2px;
+          border-radius: 4px;
+          font-size: 11px;
         }
       </style>
     </head>
@@ -397,11 +426,19 @@ export default function ResumePreview() {
     }, 500)
   }
 
-  if (!resume) {
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">Loading resume...</h1>
+      </div>
+    )
+  }
+
+  if (error || !resume) {
     return (
       <div className="max-w-2xl mx-auto py-20 text-center">
         <h1 className="text-2xl font-bold text-red-600 mb-4">Invalid resume data</h1>
-        <p className="mb-6">Unable to load resume data. Please go back and try again.</p>
+        <p className="mb-6">{error || "Unable to load resume data. Please go back and try again."}</p>
         <Button onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Resume Builder
         </Button>
@@ -409,8 +446,15 @@ export default function ResumePreview() {
     )
   }
 
-  const { personal, experience, education, skills, projects, achievements, strengths, references, visibleSections } =
-    resume
+  const { personal, experience, education, skills, projects, achievements, visibleSections } = resume
+
+  // Combine all skills into a single array for compact display
+  const allSkills = [
+    ...(skills.frontend || []),
+    ...(skills.backend || []),
+    ...(skills.databases || []),
+    ...(skills.other || []),
+  ].filter(Boolean)
 
   return (
     <div className="bg-gray-100 min-h-screen py-8 px-4">
@@ -428,11 +472,11 @@ export default function ResumePreview() {
             }
             router.back()
           }}
-          className="print:hidden"
+          className="print:hidden border-gray-300 hover:bg-gray-100 text-gray-700"
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Edit
         </Button>
-        <Button onClick={handlePrint} className="print:hidden">
+        <Button onClick={handlePrint} className="print:hidden bg-gray-700 hover:bg-gray-800">
           <Download className="mr-2 h-4 w-4" /> Download PDF
         </Button>
       </div>
@@ -445,29 +489,62 @@ export default function ResumePreview() {
       >
         <div className="p-8 h-full overflow-y-auto">
           {/* Header Section */}
-          <div className="flex justify-between items-start mb-5">
+          <div className="flex justify-between items-start mb-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-1">
+              <h1 className="text-3xl font-bold text-gray-800 mb-1">
                 {personal.firstName} {personal.lastName}
               </h1>
-              <p className="text-lg text-cyan-500 font-medium">{personal.title}</p>
+              <p className="text-lg text-blue-500 font-medium">{personal.title}</p>
 
               <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-600">
-                {personal.phone && <div className="flex items-center">{personal.phone}</div>}
-                {personal.email && <div className="flex items-center">{personal.email}</div>}
-                {personal.linkedin && <div className="flex items-center">{personal.linkedin}</div>}
-                {personal.address && <div className="flex items-center">{personal.address}</div>}
+                {personal.phone && (
+                  <div className="flex items-center">
+                    <Phone className="h-4 w-4 mr-1 text-blue-500" />
+                    {personal.phone}
+                  </div>
+                )}
+                {personal.email && (
+                  <div className="flex items-center">
+                    <a
+                      href={`mailto:${personal.email}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {personal.email}
+                    </a>
+                  </div>
+                )}
+                {personal.linkedin && (
+                  <div className="flex items-center">
+                    <a
+                      href={personal.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline flex items-center gap-1"
+                      style={{ wordBreak: "break-all" }}
+                    >
+                      {personal.linkedin}
+                      <LinkIcon className="h-4 w-4 text-blue-500 inline-block" />
+                    </a>
+                  </div>
+                )}
+                {personal.address && (
+                  <div className="flex items-center">
+                    {personal.address}
+                  </div>
+                )}
               </div>
             </div>
 
             {personal.profileImage && (
-              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
+              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
                 <img
                   src={personal.profileImage || "/placeholder.svg"}
                   alt={`${personal.firstName} ${personal.lastName}`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.src = "/placeholder.svg?height=96&width=96"
+                    e.currentTarget.src = "/placeholder.svg?height=80&width=80"
                   }}
                 />
               </div>
@@ -476,8 +553,8 @@ export default function ResumePreview() {
 
           {/* Summary Section */}
           {personal.summary && (
-            <div className="mb-5">
-              <h2 className="text-lg font-semibold border-b border-gray-300 pb-1 mb-2">SUMMARY</h2>
+            <div className="mb-4">
+              <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">SUMMARY</h2>
               <p className="text-sm text-gray-700">{personal.summary}</p>
             </div>
           )}
@@ -488,206 +565,61 @@ export default function ResumePreview() {
             <div className="flex-[2]">
               {/* Experience Section */}
               {experience.length > 0 && (
-                <div className="mb-5">
-                  <h2 className="text-lg font-semibold border-b border-gray-300 pb-1 mb-3">PROFESSIONAL EXPERIENCE</h2>
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">PROFESSIONAL EXPERIENCE</h2>
 
-                  {experience.map(
-                    (
-                      exp: {
-                        role:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        startDate:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        endDate:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        company:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        location:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        details: (
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactPortal
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        )[]
-                      },
-                      idx: Key | null | undefined,
-                    ) => (
-                      <div key={idx} className="mb-3">
-                        <div className="flex justify-between items-start">
-                          <h3 className="font-bold text-gray-800">{exp.role}</h3>
-                          <span className="text-sm text-gray-600">
-                            {exp.startDate} - {exp.endDate}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-gray-700 mb-1">
-                          <span className="font-medium">{exp.company}</span>
-                          {exp.location && (
-                            <>
-                              <span className="mx-2">•</span>
-                              <span>{exp.location}</span>
-                            </>
-                          )}
-                        </div>
-
-                        {exp.details.length > 0 && (
-                          <ul className="list-disc list-outside ml-5 text-sm text-gray-700 mt-1">
-                            {exp.details.map(
-                              (
-                                detail:
-                                  | string
-                                  | number
-                                  | bigint
-                                  | boolean
-                                  | ReactElement<unknown, string | JSXElementConstructor<any>>
-                                  | Iterable<ReactNode>
-                                  | ReactPortal
-                                  | Promise<
-                                      | string
-                                      | number
-                                      | bigint
-                                      | boolean
-                                      | ReactPortal
-                                      | ReactElement<unknown, string | JSXElementConstructor<any>>
-                                      | Iterable<ReactNode>
-                                      | null
-                                      | undefined
-                                    >
-                                  | null
-                                  | undefined,
-                                detailIdx: Key | null | undefined,
-                              ) => (
-                                <li key={detailIdx} className="mb-1">
-                                  {detail}
-                                </li>
-                              ),
-                            )}
-                          </ul>
+                  {experience.map((exp, idx) => (
+                    <div key={idx} className="mb-3">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-bold text-gray-800">{exp.role}</h3>
+                        <span className="text-sm text-gray-600">
+                          {exp.startDate} - {exp.endDate}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-gray-700 mb-1">
+                        <span className="font-medium">{exp.company}</span>
+                        {exp.location && (
+                          <>
+                            <span className="mx-2">•</span>
+                            <span>{exp.location}</span>
+                          </>
                         )}
                       </div>
-                    ),
-                  )}
+
+                      {exp.details.length > 0 && (
+                        <ul className="list-disc list-outside ml-5 text-sm text-gray-700 mt-1">
+                          {exp.details.map((detail, detailIdx) => (
+                            <li key={detailIdx} className="mb-1">
+                              {detail}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
 
               {/* Projects Section moved to main column */}
               {visibleSections?.projects !== false && projects.length > 0 && projects[0].name && (
-                <div className="mb-5">
-                  <h2 className="text-lg font-semibold border-b border-gray-300 pb-1 mb-3">PROJECTS</h2>
-                  {projects.map((project: { name: string; description: string }, idx: Key | null | undefined) => (
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">PROJECTS</h2>
+                  {projects.map((project, idx) => (
                     <div key={idx} className="mb-3">
-                      <h3 className="font-bold text-gray-800">{project.name}</h3>
+                      <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                        {project.name}
+                        {project.link && (
+                          <a
+                            href={project.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline flex items-center"
+                            aria-label="Visit project link"
+                          >
+                            <LinkIcon className="h-4 w-4 text-blue-500 inline-block" />
+                          </a>
+                        )}
+                      </h3>
                       <p className="text-sm text-gray-700">{project.description}</p>
                     </div>
                   ))}
@@ -696,139 +628,28 @@ export default function ResumePreview() {
 
               {/* Education Section */}
               {education.length > 0 && (
-                <div className="mb-5">
-                  <h2 className="text-lg font-semibold border-b border-gray-300 pb-1 mb-3">EDUCATION</h2>
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">EDUCATION</h2>
 
-                  {education.map(
-                    (
-                      edu: {
-                        degree:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        startDate:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        endDate:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        school:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                        location:
-                          | string
-                          | number
-                          | bigint
-                          | boolean
-                          | ReactElement<unknown, string | JSXElementConstructor<any>>
-                          | Iterable<ReactNode>
-                          | ReactPortal
-                          | Promise<
-                              | string
-                              | number
-                              | bigint
-                              | boolean
-                              | ReactPortal
-                              | ReactElement<unknown, string | JSXElementConstructor<any>>
-                              | Iterable<ReactNode>
-                              | null
-                              | undefined
-                            >
-                          | null
-                          | undefined
-                      },
-                      idx: Key | null | undefined,
-                    ) => (
-                      <div key={idx} className="mb-3">
-                        <div className="flex justify-between items-start">
-                          <h3 className="font-bold text-gray-800">{edu.degree}</h3>
-                          <span className="text-sm text-gray-600">
-                            {edu.startDate} - {edu.endDate}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-gray-700">
-                          <span className="font-medium">{edu.school}</span>
-                          {edu.location && (
-                            <>
-                              <span className="mx-2">•</span>
-                              <span>{edu.location}</span>
-                            </>
-                          )}
-                        </div>
+                  {education.map((edu, idx) => (
+                    <div key={idx} className="mb-3">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-bold text-gray-800">{edu.degree}</h3>
+                        <span className="text-sm text-gray-600">
+                          {edu.startDate} - {edu.endDate}
+                        </span>
                       </div>
-                    ),
-                  )}
+                      <div className="flex items-center text-gray-700">
+                        <span className="font-medium">{edu.school}</span>
+                        {edu.location && (
+                          <>
+                            <span className="mx-2">•</span>
+                            <span>{edu.location}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -836,114 +657,53 @@ export default function ResumePreview() {
             {/* Sidebar Column */}
             <div className="flex-1">
               {/* Technical Skills Section */}
-              {skills && (
-                <div className="mb-5">
-                  <h2 className="text-lg font-semibold border-b border-gray-300 pb-1 mb-3">TECHNICAL SKILLS</h2>
-
-                  {/* Frontend Skills */}
-                  {skills.frontend && skills.frontend.filter(Boolean).length > 0 && (
-                    <div className="mb-3">
-                      <h3 className="font-bold text-gray-800 text-sm mb-2">Frontend Technologies:</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {skills.frontend.filter(Boolean).map((skill, idx) => (
+              {allSkills.length > 0 && (
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">TECHNICAL SKILLS</h2>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {allSkills.map(
+                      (skill, idx) =>
+                        skill && (
                           <span
                             key={idx}
-                            className="inline-block px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs"
+                            className="inline-block bg-gray-100 rounded-md px-2 py-1 text-xs text-gray-700 mb-1"
                           >
                             {skill}
                           </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Backend Skills */}
-                  {skills.backend && skills.backend.filter(Boolean).length > 0 && (
-                    <div className="mb-3">
-                      <h3 className="font-bold text-gray-800 text-sm mb-2">Backend Technologies:</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {skills.backend.filter(Boolean).map((skill, idx) => (
-                          <span
-                            key={idx}
-                            className="inline-block px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Database Skills */}
-                  {skills.databases && skills.databases.filter(Boolean).length > 0 && (
-                    <div className="mb-3">
-                      <h3 className="font-bold text-gray-800 text-sm mb-2">Databases:</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {skills.databases.filter(Boolean).map((skill, idx) => (
-                          <span
-                            key={idx}
-                            className="inline-block px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Other Skills */}
-                  {skills.other && skills.other.filter(Boolean).length > 0 && (
-                    <div className="mb-3">
-                      <h3 className="font-bold text-gray-800 text-sm mb-2">Other Skills:</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {skills.other.filter(Boolean).map((skill, idx) => (
-                          <span
-                            key={idx}
-                            className="inline-block px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-xs"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Certificates Section */}
-              {visibleSections?.achievements !== false && achievements.length > 0 && achievements[0].title && (
-                <div className="mb-5">
-                  <h2 className="text-lg font-semibold border-b border-gray-300 pb-1 mb-3">CERTIFICATES</h2>
-                  <div className="space-y-2">
-                    {achievements.map(
-                      (
-                        achievement: { title: string; description: string; link?: string },
-                        idx: Key | null | undefined,
-                      ) => (
-                        <div key={idx} className="mb-2">
-                          <h3 className="font-bold text-gray-800 text-sm">
-                            {achievement.link ? (
-                              <a
-                                href={achievement.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-cyan-600 hover:underline"
-                              >
-                                {achievement.title}
-                              </a>
-                            ) : (
-                              achievement.title
-                            )}
-                          </h3>
-                          <p className="text-sm text-gray-700">{achievement.description}</p>
-                        </div>
-                      ),
+                        ),
                     )}
                   </div>
                 </div>
               )}
 
-              {/* References Section removed as per user request */}
+              {/* Certificates Section */}
+              {visibleSections?.achievements !== false && achievements.length > 0 && achievements[0].title && (
+                <div className="mb-4">
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">CERTIFICATES</h2>
+                  <div className="space-y-2">
+                    {achievements.map((achievement, idx) => (
+                      <div key={idx} className="mb-2">
+                        <h3 className="font-bold text-gray-800 text-sm">
+                          {achievement.link ? (
+                            <a
+                              href={achievement.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline flex items-center gap-1"
+                            >
+                              {achievement.title}
+                              <LinkIcon className="h-4 w-4 text-blue-500 inline-block" />
+                            </a>
+                          ) : (
+                            achievement.title
+                          )}
+                        </h3>
+                        <p className="text-sm text-gray-700">{achievement.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
