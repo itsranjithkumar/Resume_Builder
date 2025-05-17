@@ -1,19 +1,7 @@
 "use client"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import {
-  ArrowLeft,
-  Download,
-  Phone,
-  Mail,
-  MapPin,
-  Briefcase,
-  GraduationCap,
-  Award,
-  LinkIcon,
-  FolderKanban,
-  Code,
-} from "lucide-react"
+import { ArrowLeft, Download, Phone, Mail, MapPin, LinkIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useRef, useEffect, useState } from "react"
 
@@ -135,288 +123,349 @@ export default function ResumePreview() {
 
     const printDocument = printWindow.document
     printDocument.write(`
-  <html>
-    <head>
-      <title>Resume - ${resume?.personal?.firstName || ""} ${resume?.personal?.lastName || ""}</title>
-      <!-- Lucide Icons CDN -->
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css" />
-      <!-- Add system and fallback fonts for consistency -->
-      <style>
-        @page {
-          size: A4;
-          margin: 0;
-        }
-        html, body {
-          width: 210mm;
-          height: 297mm;
-          margin: 0;
-          padding: 0;
-          background: white !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-          color-adjust: exact !important;
-          font-family: Arial, sans-serif;
-          color: #333;
-          line-height: 1.5;
-          font-size: 12px;
-        }
-        .resume-container {
-          width: 210mm;
-          height: 297mm;
-          padding: 15mm;
-          margin: 0 auto;
-          background: white;
-          box-sizing: border-box;
-          position: relative;
-          overflow: hidden;
-        }
-        .resume-content {
-          width: 100%;
-          height: 100%;
-          box-sizing: border-box;
-          overflow: hidden;
-        }
-        h1 {
-          font-size: 24px;
-          margin-bottom: 4px;
-          color: #333;
-        }
-        h2 {
-          font-size: 16px;
-          border-bottom: 1px solid #ddd;
-          padding-bottom: 4px;
-          margin-top: 14px;
-          margin-bottom: 10px;
-          color: #2563eb;
-        }
-        h3 {
-          font-size: 14px;
-          margin-bottom: 4px;
-          margin-top: 10px;
-          color: #444;
-        }
-        p {
-          margin: 4px 0;
-          font-size: 12px;
-        }
-        .contact-info {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-top: 6px;
-          font-size: 12px;
-        }
-        .contact-item {
-          display: flex;
-          align-items: center;
-        }
-        .section {
-          margin-bottom: 14px;
-        }
-        .flex {
-          display: flex;
-        }
-        .flex-row {
-          flex-direction: row;
-        }
-        .gap-6 {
-          gap: 1.5rem;
-        }
-        .flex-\\[2\\] {
-          flex: 2;
-        }
-        .flex-1 {
-          flex: 1;
-        }
-        .justify-between {
-          justify-content: space-between;
-        }
-        .items-start {
-          align-items: flex-start;
-        }
-        .items-center {
-          align-items: center;
-        }
-        .mb-5 {
-          margin-bottom: 1rem;
-        }
-        .mb-3 {
-          margin-bottom: 0.75rem;
-        }
-        .mb-2 {
-          margin-bottom: 0.5rem;
-        }
-        .mb-1 {
-          margin-bottom: 0.25rem;
-        }
-        .mt-1 {
-          margin-top: 0.25rem;
-        }
-        .font-bold {
-          font-weight: 700;
-        }
-        .font-medium {
-          font-weight: 500;
-        }
-        .text-gray-800 {
-          color: #333;
-        }
-        .text-gray-700 {
-          color: #444;
-        }
-        .text-gray-600 {
-          color: #555;
-        }
-        .text-sm {
-          font-size: 12px;
-        }
-        .text-xs {
-          font-size: 10px;
-        }
-        .mx-2 {
-          margin-left: 0.5rem;
-          margin-right: 0.5rem;
-        }
-        .list-disc {
-          list-style-type: disc;
-        }
-        .list-outside {
-          list-style-position: outside;
-        }
-        .ml-5 {
-          margin-left: 1.25rem;
-        }
-        .grid {
-          display: grid;
-        }
-        .grid-cols-2 {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-        .gap-2 {
-          gap: 0.5rem;
-        }
-        .space-y-2 > * + * {
-          margin-top: 0.5rem;
-        }
-        .inline-block {
-          display: inline-block;
-        }
-        .px-2 {
-          padding-left: 0.5rem;
-          padding-right: 0.5rem;
-        }
-        .py-1 {
-          padding-top: 0.25rem;
-          padding-bottom: 0.25rem;
-        }
-        .bg-gray-100 {
-          background-color: #f5f5f5;
-        }
-        .rounded-md {
-          border-radius: 0.375rem;
-        }
-        .border-b {
-          border-bottom-width: 1px;
-        }
-        .border-gray-300 {
-          border-color: #ddd;
-        }
-        .pb-1 {
-          padding-bottom: 0.25rem;
-        }
-        .w-20 {
-          width: 5rem;
-        }
-        .h-20 {
-          height: 5rem;
-        }
-        .rounded-full {
-          border-radius: 9999px;
-        }
-        .overflow-hidden {
-          overflow: hidden;
-        }
-        .border-2 {
-          border-width: 2px;
-        }
-        .border-gray-200 {
-          border-color: #eee;
-        }
-        .flex-shrink-0 {
-          flex-shrink: 0;
-        }
-        .w-full {
-          width: 100%;
-        }
-        .h-full {
-          height: 100%;
-        }
-        .object-cover {
-          object-fit: cover;
-        }
-        .text-4xl {
-          font-size: 24px;
-        }
-        .text-lg {
-          font-size: 14px;
-        }
-        .text-gray-500 {
-          color: #2563eb;
-        }
-        .text-gray-600 {
-          color: #555;
-        }
-        .mt-3 {
-          margin-top: 0.75rem;
-        }
-        .flex-wrap {
-          flex-wrap: wrap;
-        }
-        .gap-3 {
-          gap: 0.75rem;
-        }
-        a {
-          color: #2563eb;
-          text-decoration: none;
-        }
-        a:hover {
-          text-decoration: underline;
-        }
-        .icon {
-          display: inline-block;
-          width: 14px;
-          height: 14px;
-          margin-right: 4px;
-          position: relative;
-          top: 2px;
-        }
-        ul {
-          margin-top: 4px;
-          margin-bottom: 8px;
-          padding-left: 20px;
-        }
-        li {
-          margin-bottom: 3px;
-          font-size: 12px;
-        }
-        .skill-tag {
-          display: inline-block;
-          background-color: #f5f5f5;
-          padding: 2px 8px;
-          margin: 2px;
-          border-radius: 4px;
-          font-size: 11px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="resume-container">
-        <div class="resume-content">
-          ${content.innerHTML}
-        </div>
+<html>
+  <head>
+    <title>Resume - ${resume?.personal?.firstName || ""} ${resume?.personal?.lastName || ""}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide-static@latest/font/lucide.css" />
+    <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      html, body {
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 0;
+        background: white !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        font-family: Arial, sans-serif;
+        color: #333;
+        line-height: 1.5;
+        font-size: 12px;
+      }
+      .resume-container {
+        width: 210mm;
+        height: 297mm;
+        padding: 15mm;
+        margin: 0 auto;
+        background: white;
+        box-sizing: border-box;
+        position: relative;
+        overflow: hidden;
+      }
+      .resume-content {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      h1 {
+        font-size: 24px;
+        margin-bottom: 4px;
+        color: #333;
+      }
+      h2 {
+  text-transform: uppercase;
+  font-size: 16px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+  margin-top: 14px;
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: bold;
+}
+      h3 {
+        font-size: 14px;
+        margin-bottom: 4px;
+        margin-top: 10px;
+        color: #444;
+      }
+      p {
+        margin: 4px 0;
+        font-size: 12px;
+      }
+      .contact-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 6px;
+        font-size: 12px;
+      }
+      .contact-item {
+        display: flex;
+        align-items: center;
+      }
+      .section {
+        margin-bottom: 14px;
+      }
+      .flex {
+        display: flex;
+      }
+      .flex-row {
+        flex-direction: row;
+      }
+      .gap-6 {
+        gap: 1.5rem;
+      }
+      .flex-\\[2\\] {
+        flex: 2;
+      }
+      .flex-1 {
+        flex: 1;
+      }
+      .justify-between {
+        justify-content: space-between;
+      }
+      .items-start {
+        align-items: flex-start;
+      }
+      .items-center {
+        align-items: center;
+      }
+      .mb-5 {
+        margin-bottom: 1rem;
+      }
+      .mb-3 {
+        margin-bottom: 0.75rem;
+      }
+      .mb-2 {
+        margin-bottom: 0.5rem;
+      }
+      .mb-1 {
+        margin-bottom: 0.25rem;
+      }
+      .mt-1 {
+        margin-top: 0.25rem;
+      }
+      .font-bold {
+        font-weight: 700;
+      }
+      .font-medium {
+        font-weight: 500;
+      }
+      .text-gray-800 {
+        color: #333;
+      }
+      .text-gray-700 {
+        color: #444;
+      }
+      .text-gray-600 {
+        color: #555;
+      }
+      .text-sm {
+        font-size: 12px;
+      }
+      .text-xs {
+        font-size: 10px;
+      }
+      .mx-2 {
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+      }
+      .list-disc {
+        list-style-type: disc;
+      }
+      .list-outside {
+        list-style-position: outside;
+      }
+      .ml-5 {
+        margin-left: 1.25rem;
+      }
+      .grid {
+        display: grid;
+      }
+      .grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .gap-2 {
+        gap: 0.5rem;
+      }
+      .space-y-2 > * + * {
+        margin-top: 0.5rem;
+      }
+      .inline-block {
+        display: inline-block;
+      }
+      .px-2 {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+      }
+      .py-1 {
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+      }
+      .bg-gray-100 {
+        background-color: #f5f5f5;
+      }
+      .rounded-md {
+        border-radius: 0.375rem;
+      }
+      .border-b {
+        border-bottom-width: 1px;
+      }
+      .border-gray-300 {
+        border-color: #ddd;
+      }
+      .border-blue-500 {
+        border-color: #2563eb;
+      }
+      .pb-1 {
+        padding-bottom: 0.25rem;
+      }
+      .w-20 {
+        width: 5rem;
+      }
+      .h-20 {
+        height: 5rem;
+      }
+      .rounded-full {
+        border-radius: 9999px;
+      }
+      .overflow-hidden {
+        overflow: hidden;
+      }
+      .border-2 {
+        border-width: 2px;
+      }
+      .border-gray-200 {
+        border-color: #eee;
+      }
+      .flex-shrink-0 {
+        flex-shrink: 0;
+      }
+      .w-full {
+        width: 100%;
+      }
+      .h-full {
+        height: 100%;
+      }
+      .object-cover {
+        object-fit: cover;
+      }
+      .text-4xl {
+        font-size: 24px;
+      }
+      .text-lg {
+        font-size: 14px;
+      }
+      .text-blue-500 {
+        color: #2563eb;
+      }
+      .text-blue-600 {
+        color: #2563eb;
+      }
+      .mt-3 {
+        margin-top: 0.75rem;
+      }
+      .flex-wrap {
+        flex-wrap: wrap;
+      }
+      .gap-3 {
+        gap: 0.75rem;
+      }
+      a {
+        color: #2563eb;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .icon {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        margin-right: 4px;
+        position: relative;
+        top: 2px;
+        color: #2563eb;
+      }
+      ul {
+        margin-top: 4px;
+        margin-bottom: 8px;
+        padding-left: 20px;
+      }
+      li {
+        margin-bottom: 3px;
+        font-size: 12px;
+      }
+      .skill-tag {
+        display: inline-block;
+        background-color: #f5f5f5;
+        padding: 2px 8px;
+        margin: 2px;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+      .gap-1 {
+        gap: 0.25rem;
+      }
+      .gap-2 {
+        gap: 0.5rem;
+      }
+      .lucide {
+        color: #2563eb;
+        width: 12px;
+        height: 12px;
+        margin-right: 4px;
+      }
+      /* Fix for contact icons */
+.contact-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+}
+.lucide {
+  width: 16px !important;
+  height: 16px !important;
+  margin-right: 6px !important;
+  display: inline-block !important;
+  color: #333 !important;
+  stroke: #333 !important;
+  stroke-width: 2px !important;
+}
+    </style>
+  </head>
+  <body>
+    <div class="resume-container">
+      <div class="resume-content">
+        ${content.innerHTML}
       </div>
-    </body>
-  </html>
+    </div>
+    <script>
+  window.onload = function() {
+    // Replace SVG icons with Unicode symbols for better PDF compatibility
+    document.querySelectorAll('.lucide-phone').forEach(icon => {
+      const span = document.createElement('span');
+      span.className = 'contact-icon';
+      span.innerHTML = '📞';
+      icon.parentNode.replaceChild(span, icon);
+    });
+    document.querySelectorAll('.lucide-mail').forEach(icon => {
+      const span = document.createElement('span');
+      span.className = 'contact-icon';
+      span.innerHTML = '✉️';
+      icon.parentNode.replaceChild(span, icon);
+    });
+    document.querySelectorAll('.lucide-map-pin').forEach(icon => {
+      const span = document.createElement('span');
+      span.className = 'contact-icon';
+      span.innerHTML = '📍';
+      icon.parentNode.replaceChild(span, icon);
+    });
+    document.querySelectorAll('.lucide-link').forEach(icon => {
+      const span = document.createElement('span');
+      span.className = 'contact-icon';
+      span.innerHTML = '🔗';
+      icon.parentNode.replaceChild(span, icon);
+    });
+  }
+</script>
+  </body>
+</html>
 `)
 
     printDocument.close()
@@ -499,12 +548,13 @@ export default function ResumePreview() {
               <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-600">
                 {personal.phone && (
                   <div className="flex items-center">
-                    <Phone className="h-4 w-4 mr-1 text-blue-500" />
+                    <Phone className="h-3 w-3 mr-1 text-blue-500" />
                     {personal.phone}
                   </div>
                 )}
                 {personal.email && (
                   <div className="flex items-center">
+                    <Mail className="h-3 w-3 mr-1 text-blue-500" />
                     <a
                       href={`mailto:${personal.email}`}
                       target="_blank"
@@ -517,20 +567,21 @@ export default function ResumePreview() {
                 )}
                 {personal.linkedin && (
                   <div className="flex items-center">
+                    <LinkIcon className="h-3 w-3 mr-1 text-blue-500" />
                     <a
                       href={personal.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline flex items-center gap-1"
+                      className="text-blue-600 hover:underline"
                       style={{ wordBreak: "break-all" }}
                     >
                       {personal.linkedin}
-                      <LinkIcon className="h-4 w-4 text-blue-500 inline-block" />
                     </a>
                   </div>
                 )}
                 {personal.address && (
                   <div className="flex items-center">
+                    <MapPin className="h-3 w-3 mr-1 text-blue-500" />
                     {personal.address}
                   </div>
                 )}
@@ -554,7 +605,7 @@ export default function ResumePreview() {
           {/* Summary Section */}
           {personal.summary && (
             <div className="mb-4">
-              <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">SUMMARY</h2>
+              <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-800">SUMMARY</h2>
               <p className="text-sm text-gray-700">{personal.summary}</p>
             </div>
           )}
@@ -566,7 +617,9 @@ export default function ResumePreview() {
               {/* Experience Section */}
               {experience.length > 0 && (
                 <div className="mb-4">
-                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">PROFESSIONAL EXPERIENCE</h2>
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-800">
+                    PROFESSIONAL EXPERIENCE
+                  </h2>
 
                   {experience.map((exp, idx) => (
                     <div key={idx} className="mb-3">
@@ -603,7 +656,7 @@ export default function ResumePreview() {
               {/* Projects Section moved to main column */}
               {visibleSections?.projects !== false && projects.length > 0 && projects[0].name && (
                 <div className="mb-4">
-                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">PROJECTS</h2>
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-800">PROJECTS</h2>
                   {projects.map((project, idx) => (
                     <div key={idx} className="mb-3">
                       <h3 className="font-bold text-gray-800 flex items-center gap-2">
@@ -629,7 +682,7 @@ export default function ResumePreview() {
               {/* Education Section */}
               {education.length > 0 && (
                 <div className="mb-4">
-                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">EDUCATION</h2>
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-800">EDUCATION</h2>
 
                   {education.map((edu, idx) => (
                     <div key={idx} className="mb-3">
@@ -659,7 +712,9 @@ export default function ResumePreview() {
               {/* Technical Skills Section */}
               {allSkills.length > 0 && (
                 <div className="mb-4">
-                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">TECHNICAL SKILLS</h2>
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-800">
+                    TECHNICAL SKILLS
+                  </h2>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {allSkills.map(
                       (skill, idx) =>
@@ -679,25 +734,25 @@ export default function ResumePreview() {
               {/* Certificates Section */}
               {visibleSections?.achievements !== false && achievements.length > 0 && achievements[0].title && (
                 <div className="mb-4">
-                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-900">CERTIFICATES</h2>
+                  <h2 className="text-lg font-bold border-b border-gray-300 pb-1 mb-2 text-gray-800">CERTIFICATES</h2>
                   <div className="space-y-2">
                     {achievements.map((achievement, idx) => (
                       <div key={idx} className="mb-2">
                         <h3 className="font-bold text-gray-800 text-sm">
-                          {achievement.link ? (
-                            <a
-                              href={achievement.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline flex items-center gap-1"
-                            >
-                              {achievement.title}
-                              <LinkIcon className="h-4 w-4 text-blue-500 inline-block" />
-                            </a>
-                          ) : (
-                            achievement.title
-                          )}
-                        </h3>
+  {achievement.link ? (
+    <a
+      href={achievement.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 hover:underline flex items-center gap-1 align-middle"
+      style={{display: 'inline-flex', alignItems: 'center', verticalAlign: 'middle'}}>
+      <span style={{verticalAlign: 'middle'}}>{achievement.title}</span>
+      <LinkIcon className="h-3 w-3 ml-1 align-middle" style={{verticalAlign: 'middle'}} />
+    </a>
+  ) : (
+    <span style={{verticalAlign: 'middle'}}>{achievement.title}</span>
+  )}
+</h3>
                         <p className="text-sm text-gray-700">{achievement.description}</p>
                       </div>
                     ))}

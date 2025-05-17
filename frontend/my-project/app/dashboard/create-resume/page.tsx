@@ -25,6 +25,68 @@ import {
 } from "lucide-react"
 
 export default function CreateResume() {
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const resumeId = searchParams?.get("resume_id") || null; // null if not editing
+  const [loadingResume, setLoadingResume] = useState(!!resumeId);
+
+  useEffect(() => {
+    if (resumeId) {
+      setLoadingResume(true);
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (!token) return;
+      fetch(`http://127.0.0.1:8000/api/resumes/${resumeId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (res) => {
+          if (!res.ok) throw new Error((await res.text()) || "Failed to fetch resume");
+          return res.json();
+        })
+        .then((data) => {
+          // Parse backend fields to frontend structure
+          const [firstName, ...lastParts] = (data.name || "").split(" ");
+          const lastName = lastParts.join(" ");
+          setPersonal((prev) => ({
+            ...prev,
+            firstName: firstName || "",
+            lastName: lastName || "",
+            phone: (data.contact || "").split(",")[1]?.trim() || "",
+            email: (data.contact || "").split(",")[0]?.trim() || "",
+            address: (data.contact || "").split(",")[2]?.trim() || "",
+            title: data.title || "",
+            linkedin: "",
+            summary: data.summary || "",
+            profileImage: data.profileImage || "",
+            profileImageFile: null,
+          }));
+          let parsedSkills;
+          try {
+            parsedSkills = JSON.parse(data.skills);
+          } catch {
+            parsedSkills = {
+              frontend: [],
+              backend: [],
+              databases: [],
+              other: [],
+            };
+            if (data.skills) {
+              parsedSkills.other = data.skills
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+            }
+          }
+          setSkills(parsedSkills);
+          setExperience(JSON.parse(data.experience || "[]"));
+          setEducation(JSON.parse(data.education || "[]"));
+          setProjects(JSON.parse(data.projects || "[]"));
+          setAchievements(JSON.parse(data.achievements || "[]"));
+          setLoadingResume(false);
+        })
+        .catch(() => setLoadingResume(false));
+    }
+    // eslint-disable-next-line
+  }, [resumeId]);
+
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -105,11 +167,13 @@ export default function CreateResume() {
     ],
   )
 
+  // Update the projects state to include a link field
   const [projects, setProjects] = useState(
     savedState?.projects || [
       {
         name: "",
         description: "",
+        link: "", // Add link field
       },
     ],
   )
@@ -169,8 +233,9 @@ export default function CreateResume() {
     }))
   }
 
+  // Update the addProject function to include the link field
   const addProject = () => {
-    setProjects([...projects, { name: "", description: "" }])
+    setProjects([...projects, { name: "", description: "", link: "" }])
   }
 
   const addAchievement = () => {
@@ -255,40 +320,59 @@ export default function CreateResume() {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/resumes/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      })
-
+      let res;
+      if (resumeId) {
+        // PATCH to update existing resume
+        res = await fetch(`http://127.0.0.1:8000/api/resumes/${resumeId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        // POST to create new resume
+        res = await fetch("http://127.0.0.1:8000/api/resumes/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      }
       if (!res.ok) {
         if (res.status === 401) {
-          alert("Session expired or not authenticated. Please log in again.")
-          localStorage.removeItem("token")
-          router.push("/login")
-          return
+          alert("Session expired or not authenticated. Please log in again.");
+          localStorage.removeItem("token");
+          router.push("/login");
+          return;
         }
-        const msg = await res.text()
-        throw new Error(msg || "Failed to save resume")
+        const msg = await res.text();
+        throw new Error(msg || "Failed to save resume");
       }
-
-      const newResume = await res.json()
-      router.push(`/dashboard/resume-preview?resume_id=${newResume.resume_id}`)
+      const newResume = await res.json();
+      router.push(`/dashboard/resume-preview?resume_id=${newResume.resume_id || resumeId}`);
     } catch (err: any) {
       if (err.message.includes("401")) {
-        alert("Session expired or not authenticated. Please log in again.")
-        localStorage.removeItem("token")
-        router.push("/login")
+        alert("Session expired or not authenticated. Please log in again.");
+        localStorage.removeItem("token");
+        router.push("/login");
       } else {
-        alert("Error saving resume: " + (err?.message || "Unknown error"))
+        alert("Error saving resume: " + (err?.message || "Unknown error"));
       }
-      console.error("Resume save error:", err)
+      console.error("Resume save error:", err);
     }
   }
 
+  if (loadingResume) {
+    return (
+      <div className="max-w-2xl mx-auto py-20 text-center">
+        <h1 className="text-2xl font-bold mb-4">Loading resume for editing...</h1>
+      </div>
+    );
+  }
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-6 text-gray-800 flex items-center">
@@ -299,29 +383,35 @@ export default function CreateResume() {
       <form onSubmit={handleGenerate} className="space-y-8">
         <Tabs defaultValue="personal" className="w-full">
           <TabsList className="grid grid-cols-6 mb-6">
-            <TabsTrigger value="personal" className="flex items-center gap-2">
+            <TabsTrigger value="personal" className="flex items-center gap-2 text-sm">
               <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Personal</span>
+              <span className="hidden sm:inline">1. Personal</span>
+              <span className="sm:hidden">1</span>
             </TabsTrigger>
-            <TabsTrigger value="experience" className="flex items-center gap-2">
+            <TabsTrigger value="experience" className="flex items-center gap-2 text-sm">
               <Briefcase className="h-4 w-4" />
-              <span className="hidden sm:inline">Experience</span>
+              <span className="hidden sm:inline">2. Experience</span>
+              <span className="sm:hidden">2</span>
             </TabsTrigger>
-            <TabsTrigger value="education" className="flex items-center gap-2">
+            <TabsTrigger value="education" className="flex items-center gap-2 text-sm">
               <GraduationCap className="h-4 w-4" />
-              <span className="hidden sm:inline">Education</span>
+              <span className="hidden sm:inline">3. Education</span>
+              <span className="sm:hidden">3</span>
             </TabsTrigger>
-            <TabsTrigger value="skills" className="flex items-center gap-2">
+            <TabsTrigger value="skills" className="flex items-center gap-2 text-sm">
               <Code className="h-4 w-4" />
-              <span className="hidden sm:inline">Skills</span>
+              <span className="hidden sm:inline">4. Skills</span>
+              <span className="sm:hidden">4</span>
             </TabsTrigger>
-            <TabsTrigger value="projects" className="flex items-center gap-2">
+            <TabsTrigger value="projects" className="flex items-center gap-2 text-sm">
               <FolderKanban className="h-4 w-4" />
-              <span className="hidden sm:inline">Projects</span>
+              <span className="hidden sm:inline">5. Projects</span>
+              <span className="sm:hidden">5</span>
             </TabsTrigger>
-            <TabsTrigger value="achievements" className="flex items-center gap-2">
+            <TabsTrigger value="achievements" className="flex items-center gap-2 text-sm">
               <Award className="h-4 w-4" />
-              <span className="hidden sm:inline">Certificates</span>
+              <span className="hidden sm:inline">6. Certificates</span>
+              <span className="sm:hidden">6</span>
             </TabsTrigger>
           </TabsList>
 
@@ -496,6 +586,15 @@ export default function CreateResume() {
                     </div>
                   </div>
                 </div>
+                <div className="flex justify-end mt-6">
+                  <Button
+                    type="button"
+                    onClick={() => document.querySelector('[data-value="experience"]')?.click()}
+                    className="bg-gray-700 hover:bg-gray-800"
+                  >
+                    Next: Experience
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -653,6 +752,23 @@ export default function CreateResume() {
                     </div>
                   </div>
                 ))}
+                <div className="flex justify-between mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.querySelector('[data-value="personal"]')?.click()}
+                    className="border-gray-300 hover:bg-gray-100"
+                  >
+                    Previous: Personal
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => document.querySelector('[data-value="education"]')?.click()}
+                    className="bg-gray-700 hover:bg-gray-800"
+                  >
+                    Next: Education
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -768,6 +884,23 @@ export default function CreateResume() {
                     </div>
                   </div>
                 ))}
+                <div className="flex justify-between mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.querySelector('[data-value="experience"]')?.click()}
+                    className="border-gray-300 hover:bg-gray-100"
+                  >
+                    Previous: Experience
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => document.querySelector('[data-value="skills"]')?.click()}
+                    className="bg-gray-700 hover:bg-gray-800"
+                  >
+                    Next: Skills
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -956,6 +1089,23 @@ export default function CreateResume() {
                     ))}
                   </div>
                 </div>
+                <div className="flex justify-between mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.querySelector('[data-value="education"]')?.click()}
+                    className="border-gray-300 hover:bg-gray-100"
+                  >
+                    Previous: Education
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => document.querySelector('[data-value="projects"]')?.click()}
+                    className="bg-gray-700 hover:bg-gray-800"
+                  >
+                    Next: Projects
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1026,9 +1176,39 @@ export default function CreateResume() {
                           required
                         />
                       </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-600">Project Link (Optional)</label>
+                        <Input
+                          placeholder="e.g. https://github.com/your-project"
+                          value={project.link}
+                          onChange={(e) =>
+                            setProjects((projects: any[]) =>
+                              projects.map((p, i) => (i === idx ? { ...p, link: e.target.value } : p)),
+                            )
+                          }
+                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
+                <div className="flex justify-between mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.querySelector('[data-value="skills"]')?.click()}
+                    className="border-gray-300 hover:bg-gray-100"
+                  >
+                    Previous: Skills
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => document.querySelector('[data-value="achievements"]')?.click()}
+                    className="bg-gray-700 hover:bg-gray-800"
+                  >
+                    Next: Certificates
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1115,15 +1295,51 @@ export default function CreateResume() {
                     </div>
                   </div>
                 ))}
+                <div className="flex justify-between mt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.querySelector('[data-value="projects"]')?.click()}
+                    className="border-gray-300 hover:bg-gray-100"
+                  >
+                    Previous: Projects
+                  </Button>
+                  <Button type="submit" className="bg-gray-700 hover:bg-gray-800">
+                    Preview Resume
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
 
-        <div className="flex justify-end">
-          <Button type="submit" size="lg" className="px-8 bg-gray-700 hover:bg-gray-800">
-            Preview Resume
+        <div className="flex justify-between mt-8">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            className="border-gray-300 hover:bg-gray-100"
+          >
+            Back
           </Button>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              onClick={() => {
+                // Save current form state
+                saveFormState({ personal, experience, education, skills, projects, achievements })
+                // Show success message
+                alert("Form progress saved! You can continue later.")
+              }}
+              variant="outline"
+              className="border-gray-300 hover:bg-gray-100"
+            >
+              Save Progress
+            </Button>
+            <Button type="submit" size="lg" className="px-8 bg-gray-700 hover:bg-gray-800">
+              Preview Resume
+            </Button>
+          </div>
         </div>
       </form>
     </div>
