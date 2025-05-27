@@ -53,6 +53,9 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const errorText = await res.text();
+      if (res.status === 429) {
+        return NextResponse.json({ error: "Rate limit exceeded. Please try again later.", detail: errorText }, { status: 429 });
+      }
       return NextResponse.json({ error: `API error ${res.status}`, detail: errorText }, { status: 500 });
     }
 
@@ -76,6 +79,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ text: improved, raw: data });
   } catch (error: any) {
+    // If the error has a status of 429, return a 429 response
+    if (error?.response?.status === 429) {
+      return NextResponse.json({ error: "Rate limit exceeded. Please try again later." }, { status: 429 });
+    }
     return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
   }
 }
