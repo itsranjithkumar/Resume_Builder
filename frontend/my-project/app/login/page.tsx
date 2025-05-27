@@ -31,9 +31,9 @@ export default function LoginPage() {
       if (!res.ok) {
         setError(data.detail || "Invalid credentials")
       } else {
-        // Store JWT token and redirect to dashboard
+        // Store JWT token and redirect to home
         localStorage.setItem("token", data.access_token)
-        window.location.href = "/dashboard"
+        window.location.href = "/"
       }
     } catch (err) {
       setError("Network error")

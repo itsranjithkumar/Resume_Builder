@@ -19,7 +19,85 @@ interface ResumeFormProps {
 }
 
 export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProps) {
-  const [imagePreview, setImagePreview] = useState<string>("")
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [aiLoading, setAiLoading] = useState(false);
+  // Per-field loading states
+  const [experienceAiLoading, setExperienceAiLoading] = useState<{ [id: string]: { [field: string]: boolean } }>({});
+  const [educationAiLoading, setEducationAiLoading] = useState<{ [id: string]: { [field: string]: boolean } }>({});
+  const [projectAiLoading, setProjectAiLoading] = useState<{ [id: string]: { [field: string]: boolean } }>({});
+  const [certificationAiLoading, setCertificationAiLoading] = useState<{ [id: string]: { [field: string]: boolean } }>({});
+
+  // Generic AI improvement handler for any field
+  const improveFieldWithAI = async (section: string, id: string, field: string, value: string) => {
+    let setLoading;
+    let loadingKey;
+    switch (section) {
+      case 'experience': setLoading = setExperienceAiLoading; loadingKey = experienceAiLoading; break;
+      case 'education': setLoading = setEducationAiLoading; loadingKey = educationAiLoading; break;
+      case 'project': setLoading = setProjectAiLoading; loadingKey = projectAiLoading; break;
+      case 'certification': setLoading = setCertificationAiLoading; loadingKey = certificationAiLoading; break;
+      default: return;
+    }
+    setLoading((prev: any) => ({ ...prev, [id]: { ...prev[id], [field]: true } }));
+    try {
+      const res = await fetch("/api/ai-correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: value, field })
+      });
+      const result = await res.json();
+      if (res.ok && result.text) {
+        // Update the correct section/field
+        if (section === 'experience') {
+          const updated = data.experience.map((exp) => exp.id === id ? { ...exp, [field]: result.text } : exp);
+          onChange({ ...data, experience: updated });
+        } else if (section === 'education') {
+          const updated = data.education.map((edu) => edu.id === id ? { ...edu, [field]: result.text } : edu);
+          onChange({ ...data, education: updated });
+        } else if (section === 'project') {
+          const updated = data.projects.map((proj) => proj.id === id ? { ...proj, [field]: result.text } : proj);
+          onChange({ ...data, projects: updated });
+        } else if (section === 'certification') {
+          const updated = data.certifications.map((cert) => cert.id === id ? { ...cert, [field]: result.text } : cert);
+          onChange({ ...data, certifications: updated });
+        }
+        window.alert("Field improved with AI!");
+      } else {
+        window.alert(result.error || "AI improvement failed.");
+      }
+    } catch (e: any) {
+      window.alert("AI improvement failed: " + (e?.message || e));
+    } finally {
+      setLoading((prev: any) => ({ ...prev, [id]: { ...prev[id], [field]: false } }));
+    }
+  };
+
+  // AI improvement handler for summary field
+  const improveWithAI = async () => {
+    if (!data.summary.trim()) {
+      window.alert("Please enter a professional summary before improving with AI.");
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/ai-correct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: data.summary, field: "summary" })
+      });
+      const result = await res.json();
+      if (res.ok && result.text) {
+        onChange({ ...data, summary: result.text });
+        window.alert("Summary improved with AI!");
+      } else {
+        window.alert(result.error || "AI improvement failed.");
+      }
+    } catch (e: any) {
+      window.alert("AI improvement failed: " + (e?.message || e));
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const updatePersonalInfo = (field: string, value: string) => {
     onChange({
@@ -64,6 +142,7 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
       startDate: "",
       endDate: "",
       gpa: "",
+      location: "",
     }
     onChange({ ...data, education: [...data.education, newEdu] })
   }
@@ -240,8 +319,11 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
 
       {/* Professional Summary */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl font-semibold">Professional Summary</CardTitle>
+          <Button onClick={improveWithAI} disabled={aiLoading} variant="outline" size="sm">
+            {aiLoading ? "Improving..." : "Improve with AI"}
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -283,11 +365,21 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Company *</Label>
-                  <Input
-                    value={exp.company}
-                    onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
-                    placeholder="Google"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={exp.company}
+                      onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
+                      placeholder="Google"
+                    />
+                    <Button
+                      onClick={() => improveFieldWithAI('experience', exp.id, 'company', exp.company)}
+                      disabled={!!experienceAiLoading[exp.id]?.company}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {experienceAiLoading[exp.id]?.company ? "Improving..." : "Improve with AI"}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Position *</Label>
@@ -333,12 +425,22 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
               </div>
               <div className="space-y-2">
                 <Label>Job Description</Label>
-                <Textarea
-                  value={exp.description}
-                  onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
-                  placeholder="• Led a team of 5 engineers to develop scalable web applications&#10;• Improved system performance by 40% through optimization&#10;• Implemented CI/CD pipelines reducing deployment time by 60%"
-                  rows={4}
-                />
+                <div className="flex gap-2">
+                  <Textarea
+                    value={exp.description}
+                    onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
+                    placeholder="• Led a team of 5 engineers to develop scalable web applications&#10;• Improved system performance by 40% through optimization&#10;• Implemented CI/CD pipelines reducing deployment time by 60%"
+                    rows={4}
+                  />
+                  <Button
+                    onClick={() => improveFieldWithAI('experience', exp.id, 'description', exp.description)}
+                    disabled={!!experienceAiLoading[exp.id]?.description}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {experienceAiLoading[exp.id]?.description ? "Improving..." : "Improve with AI"}
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -371,27 +473,57 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Institution *</Label>
-                  <Input
-                    value={edu.institution}
-                    onChange={(e) => updateEducation(edu.id, "institution", e.target.value)}
-                    placeholder="Stanford University"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={edu.institution}
+                      onChange={(e) => updateEducation(edu.id, "institution", e.target.value)}
+                      placeholder="Stanford University"
+                    />
+                    <Button
+                      onClick={() => improveFieldWithAI('education', edu.id, 'institution', edu.institution)}
+                      disabled={!!educationAiLoading[edu.id]?.institution}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {educationAiLoading[edu.id]?.institution ? "Improving..." : "Improve with AI"}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Degree *</Label>
-                  <Input
-                    value={edu.degree}
-                    onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
-                    placeholder="Bachelor of Science"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={edu.degree}
+                      onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
+                      placeholder="Bachelor of Science"
+                    />
+                    <Button
+                      onClick={() => improveFieldWithAI('education', edu.id, 'degree', edu.degree)}
+                      disabled={!!educationAiLoading[edu.id]?.degree}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {educationAiLoading[edu.id]?.degree ? "Improving..." : "Improve with AI"}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Field of Study</Label>
-                  <Input
-                    value={edu.field}
-                    onChange={(e) => updateEducation(edu.id, "field", e.target.value)}
-                    placeholder="Computer Science"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={edu.field}
+                      onChange={(e) => updateEducation(edu.id, "field", e.target.value)}
+                      placeholder="Computer Science"
+                    />
+                    <Button
+                      onClick={() => improveFieldWithAI('education', edu.id, 'field', edu.field)}
+                      disabled={!!educationAiLoading[edu.id]?.field}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {educationAiLoading[edu.id]?.field ? "Improving..." : "Improve with AI"}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>GPA</Label>
@@ -449,11 +581,21 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Project Name *</Label>
-                  <Input
-                    value={project.name}
-                    onChange={(e) => updateProject(project.id, "name", e.target.value)}
-                    placeholder="E-commerce Platform"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={project.name}
+                      onChange={(e) => updateProject(project.id, "name", e.target.value)}
+                      placeholder="E-commerce Platform"
+                    />
+                    <Button
+                      onClick={() => improveFieldWithAI('project', project.id, 'name', project.name)}
+                      disabled={!!projectAiLoading[project.id]?.name}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {projectAiLoading[project.id]?.name ? "Improving..." : "Improve with AI"}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Technologies</Label>
@@ -474,12 +616,22 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
               </div>
               <div className="space-y-2">
                 <Label>Description</Label>
-                <Textarea
-                  value={project.description}
-                  onChange={(e) => updateProject(project.id, "description", e.target.value)}
-                  placeholder="Built a full-stack e-commerce platform with user authentication, payment processing, and admin dashboard..."
-                  rows={3}
-                />
+                <div className="flex gap-2">
+                  <Textarea
+                    value={project.description}
+                    onChange={(e) => updateProject(project.id, "description", e.target.value)}
+                    placeholder="Built a full-stack e-commerce platform with user authentication, payment processing, and admin dashboard..."
+                    rows={3}
+                  />
+                  <Button
+                    onClick={() => improveFieldWithAI('project', project.id, 'description', project.description)}
+                    disabled={!!projectAiLoading[project.id]?.description}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {projectAiLoading[project.id]?.description ? "Improving..." : "Improve with AI"}
+                  </Button>
+                </div>
               </div>
             </div>
           ))}
@@ -558,19 +710,39 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Certification Name *</Label>
-                  <Input
-                    value={cert.name}
-                    onChange={(e) => updateCertification(cert.id, "name", e.target.value)}
-                    placeholder="AWS Certified Solutions Architect"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={cert.name}
+                      onChange={(e) => updateCertification(cert.id, "name", e.target.value)}
+                      placeholder="AWS Certified Solutions Architect"
+                    />
+                    <Button
+                      onClick={() => improveFieldWithAI('certification', cert.id, 'name', cert.name)}
+                      disabled={!!certificationAiLoading[cert.id]?.name}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {certificationAiLoading[cert.id]?.name ? "Improving..." : "Improve with AI"}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Issuing Organization *</Label>
-                  <Input
-                    value={cert.issuer}
-                    onChange={(e) => updateCertification(cert.id, "issuer", e.target.value)}
-                    placeholder="Amazon Web Services"
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={cert.issuer}
+                      onChange={(e) => updateCertification(cert.id, "issuer", e.target.value)}
+                      placeholder="Amazon Web Services"
+                    />
+                    <Button
+                      onClick={() => improveFieldWithAI('certification', cert.id, 'issuer', cert.issuer)}
+                      disabled={!!certificationAiLoading[cert.id]?.issuer}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {certificationAiLoading[cert.id]?.issuer ? "Improving..." : "Improve with AI"}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Issue Date</Label>

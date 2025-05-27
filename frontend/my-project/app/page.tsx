@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import ResumeForm from "@/components/resume-form"
 import ResumePreview from "@/components/resume-preview"
 import { Button } from "@/components/ui/button"
@@ -28,6 +30,7 @@ export interface ResumeData {
     description: string
   }>
   education: Array<{
+    location: string
     id: string
     institution: string
     degree: string
@@ -76,8 +79,35 @@ const initialData: ResumeData = {
 }
 
 export default function ResumePage() {
+  const router = useRouter()
   const [resumeData, setResumeData] = useState<ResumeData>(initialData)
   const [currentView, setCurrentView] = useState<"form" | "preview">("form")
+
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+    // Validate token with backend
+    fetch("http://127.0.0.1:8000/api/users/validate-token", {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) {
+          localStorage.removeItem("token");
+          router.push("/login");
+        } else {
+          setAuthChecked(true);
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+        router.push("/login");
+      });
+  }, [router]);
 
   const handlePreview = () => {
     setCurrentView("preview")
@@ -117,11 +147,18 @@ export default function ResumePage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {currentView === "form" ? (
-          <ResumeForm data={resumeData} onChange={setResumeData} onPreview={handlePreview} />
-        ) : (
-          <ResumePreview data={resumeData} />
-        )}
+        <div className="max-w-5xl mx-auto py-8">
+          {currentView === "form" ? (
+            <ResumeForm data={resumeData} onChange={setResumeData} onPreview={handlePreview} />
+          ) : (
+            <>
+              <Button variant="outline" onClick={handleBackToForm} className="mb-6">
+                Back to Edit
+              </Button>
+              <ResumePreview data={resumeData} />
+            </>
+          )}
+        </div>
       </main>
     </div>
   )
