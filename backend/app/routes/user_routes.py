@@ -6,6 +6,13 @@ import os
 
 router = APIRouter()
 
+from fastapi import Request
+from app.auth import get_current_user
+
+@router.get("/validate-token")
+def validate_token(current_user=Depends(get_current_user)):
+    return {"valid": True}
+
 @router.post("/register")
 def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     db_user = crud.create_user(db, user)
