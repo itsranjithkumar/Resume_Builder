@@ -88,9 +88,9 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto pt-0 mt-0">
       {/* Download Button */}
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-end mb-6 no-print print:hidden">
         <Button onClick={handleDownloadPDF} className="bg-blue-600 hover:bg-blue-700 text-white">
           <Download className="h-4 w-4 mr-2" />
           Download PDF
@@ -106,17 +106,25 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
           width: "816px", // 8.5 inches at 96 DPI
           height: "1056px", // 11 inches at 96 DPI
           margin: "0 auto",
-          marginTop: "0", // Ensure no top margin
-          paddingTop: "0", // Ensure no top padding
+          marginTop: 0,
+          paddingTop: 0,
         }}
       >
         {/* Left Sidebar */}
         <div className="w-80 bg-gray-50 p-8 flex flex-col gap-6">
           {/* Profile Section */}
           <div className="text-center">
-            <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-gray-500">
-              {data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN"}
-            </div>
+            {data.personalInfo.image ? (
+              <img
+                src={data.personalInfo.image}
+                alt={data.personalInfo.fullName || "Profile"}
+                className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-2 border-gray-300"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-gray-500">
+                {data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN"}
+              </div>
+            )}
             <h1 className="text-xl font-bold text-blue-600 mb-1 leading-tight">
               {data.personalInfo.fullName || "Your Name"}
             </h1>
@@ -274,9 +282,9 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
               <h2 className="text-base font-bold text-blue-600 mb-4 pb-1 border-b-2 border-gray-200">Projects</h2>
               <div className="space-y-4">
                 {data.projects.map((project) => (
-                  <div key={project.id} className="relative pl-4">
-                    <div className="absolute left-0 top-1 w-2 h-2 bg-blue-600 rounded-full"></div>
+                  <div key={project.id} className="mb-4">
                     <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></span>
                       <h3 className="text-sm font-semibold text-gray-800">{project.name}</h3>
                       {project.link && (
                         <>

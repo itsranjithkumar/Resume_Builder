@@ -133,7 +133,7 @@ export default function ResumePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 no-print">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 no-print print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-3">
@@ -165,7 +165,7 @@ export default function ResumePage() {
             <ResumeForm data={resumeData} onChange={setResumeData} onPreview={handlePreview} />
           ) : (
             <>
-              <Button variant="outline" onClick={handleBackToForm} className="mb-6 no-print">
+              <Button variant="outline" onClick={handleBackToForm} className="mb-6 no-print print:hidden">
                 Back to Edit
               </Button>
               <ResumePreview data={resumeData} />
