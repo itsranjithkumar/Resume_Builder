@@ -8,7 +8,13 @@ interface ResumePreviewProps {
   data: ResumeData
 }
 
+import { useEffect } from "react";
+
 export default function ResumePreview({ data }: ResumePreviewProps) {
+  useEffect(() => {
+    console.log("Resume JSON:", JSON.stringify(data, null, 2));
+  }, [data]);
+  console.log(data)
   const formatDate = (dateString: string) => {
     if (!dateString) return ""
     const date = new Date(dateString + "-01")
@@ -84,15 +90,14 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Download Button */}
+      {/* Download Button (OUTSIDE resume-content) */}
       <div className="flex justify-end mb-6">
         <Button onClick={handleDownloadPDF} className="bg-blue-600 hover:bg-blue-700 text-white">
           <Download className="h-4 w-4 mr-2" />
           Download PDF
         </Button>
       </div>
-
-      {/* Resume Content */}
+      {/* Only Resume Content for PDF/Print */}
       <div
         id="resume-content"
         className="bg-white shadow-2xl border border-gray-200 flex overflow-hidden"
@@ -107,9 +112,17 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
         <div className="w-80 bg-gray-50 p-8 flex flex-col gap-6">
           {/* Profile Section */}
           <div className="text-center">
-            <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-gray-500">
-              {data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN"}
-            </div>
+            {data.personalInfo.image ? (
+              <img
+                src={data.personalInfo.image}
+                alt={data.personalInfo.fullName || "Profile"}
+                className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-2 border-gray-300"
+              />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-gray-500">
+                {data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN"}
+              </div>
+            )}
             <h1 className="text-xl font-bold text-blue-600 mb-1 leading-tight">
               {data.personalInfo.fullName || "Your Name"}
             </h1>
