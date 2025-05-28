@@ -8,13 +8,7 @@ interface ResumePreviewProps {
   data: ResumeData
 }
 
-import { useEffect } from "react";
-
 export default function ResumePreview({ data }: ResumePreviewProps) {
-  useEffect(() => {
-    console.log("Resume JSON:", JSON.stringify(data, null, 2));
-  }, [data]);
-  console.log(data)
   const formatDate = (dateString: string) => {
     if (!dateString) return ""
     const date = new Date(dateString + "-01")
@@ -32,12 +26,16 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
 
       // Create canvas from the resume content
       const canvas = await html2canvas(element, {
-        scale: 2, // Higher resolution
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
         width: element.offsetWidth,
         height: element.offsetHeight,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
       })
 
       const imgData = canvas.toDataURL("image/png")
@@ -49,19 +47,20 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
         format: [8.5, 11],
       })
 
-      // Calculate dimensions to fit the page
       const pdfWidth = 8.5
       const pdfHeight = 11
       const imgWidth = canvas.width
       const imgHeight = canvas.height
-      const ratio = Math.min(pdfWidth / (imgWidth / 96), pdfHeight / (imgHeight / 96))
 
-      const finalWidth = (imgWidth / 96) * ratio
-      const finalHeight = (imgHeight / 96) * ratio
+      // Scale to fit width perfectly, maintaining aspect ratio
+      const ratio = pdfWidth / (imgWidth / 192) // Using 192 DPI for scale 2
 
-      // Center the image on the page
-      const x = (pdfWidth - finalWidth) / 2
-      const y = (pdfHeight - finalHeight) / 2
+      const finalWidth = pdfWidth
+      const finalHeight = (imgHeight / 192) * ratio
+
+      // Position at top-left corner
+      const x = 0
+      const y = 0
 
       pdf.addImage(imgData, "PNG", x, y, finalWidth, finalHeight)
 
@@ -90,14 +89,15 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Download Button (OUTSIDE resume-content) */}
+      {/* Download Button */}
       <div className="flex justify-end mb-6">
         <Button onClick={handleDownloadPDF} className="bg-blue-600 hover:bg-blue-700 text-white">
           <Download className="h-4 w-4 mr-2" />
           Download PDF
         </Button>
       </div>
-      {/* Only Resume Content for PDF/Print */}
+
+      {/* Resume Content */}
       <div
         id="resume-content"
         className="bg-white shadow-2xl border border-gray-200 flex overflow-hidden"
@@ -106,23 +106,17 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
           width: "816px", // 8.5 inches at 96 DPI
           height: "1056px", // 11 inches at 96 DPI
           margin: "0 auto",
+          marginTop: "0", // Ensure no top margin
+          paddingTop: "0", // Ensure no top padding
         }}
       >
         {/* Left Sidebar */}
         <div className="w-80 bg-gray-50 p-8 flex flex-col gap-6">
           {/* Profile Section */}
           <div className="text-center">
-            {data.personalInfo.image ? (
-              <img
-                src={data.personalInfo.image}
-                alt={data.personalInfo.fullName || "Profile"}
-                className="w-32 h-32 rounded-full object-cover mx-auto mb-4 border-2 border-gray-300"
-              />
-            ) : (
-              <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-gray-500">
-                {data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN"}
-              </div>
-            )}
+            <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-gray-500">
+              {data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN"}
+            </div>
             <h1 className="text-xl font-bold text-blue-600 mb-1 leading-tight">
               {data.personalInfo.fullName || "Your Name"}
             </h1>
