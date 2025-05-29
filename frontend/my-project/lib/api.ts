@@ -34,7 +34,9 @@ export async function deleteResume(token: string, resumeId: string) {
   return res.json();
 }
 
-export async function createResume(token: string, resume: any) {
+import type { ResumeData } from "@/app/types";
+
+export async function createResume(token: string, resume: ResumeData) {
   const res = await fetch(`${API_BASE_URL}/`, {
     method: "POST",
     headers: {
@@ -49,7 +51,7 @@ export async function createResume(token: string, resume: any) {
   return res.json();
 }
 
-export async function updateResume(token: string, resumeId: string, resume: any) {
+export async function updateResume(token: string, resumeId: string, resume: ResumeData) {
   const res = await fetch(`${API_BASE_URL}/${resumeId}`, {
     method: "PATCH",
     headers: {

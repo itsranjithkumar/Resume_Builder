@@ -48,7 +48,7 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
       })
 
       const pdfWidth = 8.5
-      const pdfHeight = 11
+      // const pdfHeight = 11 // Removed unused variable
       const imgWidth = canvas.width
       const imgHeight = canvas.height
 

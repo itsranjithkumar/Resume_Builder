@@ -41,5 +41,5 @@ export interface ResumeData {
     date: string;
     link: string;
   }>;
-  [key: string]: any;
+  [key: string]: unknown;
 }

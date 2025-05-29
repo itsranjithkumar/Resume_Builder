@@ -18,8 +18,17 @@ import {
 } from "@/components/ui/alert-dialog"
 import { FileText } from "lucide-react"
 
+interface Resume {
+  id: string;
+  title: string;
+  jobTitle: string;
+  email: string;
+  phone: string;
+  // Add more fields if your backend returns them
+}
+
 const ResumesPage = () => {
-  const [resumes, setResumes] = useState<any[]>([])
+  const [resumes, setResumes] = useState<Resume[]>([])
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 

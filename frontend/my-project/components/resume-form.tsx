@@ -27,23 +27,22 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
   const [imagePreview, setImagePreview] = useState<string>("");
   const [aiLoading, setAiLoading] = useState(false);
   // Per-field loading states
-  const [experienceAiLoading, setExperienceAiLoading] = useState<{ [id: string]: { [field: string]: boolean } }>({});
-  const [educationAiLoading, setEducationAiLoading] = useState<{ [id: string]: { [field: string]: boolean } }>({});
-  const [projectAiLoading, setProjectAiLoading] = useState<{ [id: string]: { [field: string]: boolean } }>({});
-  const [certificationAiLoading, setCertificationAiLoading] = useState<{ [id: string]: { [field: string]: boolean } }>({});
+  const [experienceAiLoading, setExperienceAiLoading] = useState<Record<string, Record<string, boolean>>>({});
+  const [educationAiLoading, setEducationAiLoading] = useState<Record<string, Record<string, boolean>>>({});
+  const [projectAiLoading, setProjectAiLoading] = useState<Record<string, Record<string, boolean>>>({});
+  const [certificationAiLoading, setCertificationAiLoading] = useState<Record<string, Record<string, boolean>>>({});
 
   // Generic AI improvement handler for any field
   const improveFieldWithAI = async (section: string, id: string, field: string, value: string) => {
-    let setLoading;
-    let loadingKey;
+    let setLoading: React.Dispatch<React.SetStateAction<Record<string, Record<string, boolean>>>>;
     switch (section) {
-      case 'experience': setLoading = setExperienceAiLoading; loadingKey = experienceAiLoading; break;
-      case 'education': setLoading = setEducationAiLoading; loadingKey = educationAiLoading; break;
-      case 'project': setLoading = setProjectAiLoading; loadingKey = projectAiLoading; break;
-      case 'certification': setLoading = setCertificationAiLoading; loadingKey = certificationAiLoading; break;
+      case 'experience': setLoading = setExperienceAiLoading; break;
+      case 'education': setLoading = setEducationAiLoading; break;
+      case 'project': setLoading = setProjectAiLoading; break;
+      case 'certification': setLoading = setCertificationAiLoading; break;
       default: return;
     }
-    setLoading((prev: any) => ({ ...prev, [id]: { ...prev[id], [field]: true } }));
+    setLoading((prev) => ({ ...prev, [id]: { ...prev[id], [field]: true } }));
     try {
       const res = await fetch("/api/ai-correct", {
         method: "POST",
@@ -70,10 +69,14 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
       } else {
         window.alert(result.error || "AI improvement failed.");
       }
-    } catch (e: any) {
-      window.alert("AI improvement failed: " + (e?.message || e));
+    } catch (e: unknown) {
+      if (typeof e === "object" && e !== null && "message" in e && typeof (e as { message?: string }).message === "string") {
+        window.alert("AI improvement failed: " + (e as { message: string }).message);
+      } else {
+        window.alert("AI improvement failed: " + String(e));
+      }
     } finally {
-      setLoading((prev: any) => ({ ...prev, [id]: { ...prev[id], [field]: false } }));
+      setLoading((prev) => ({ ...prev, [id]: { ...prev[id], [field]: false } }));
     }
   };
 
@@ -97,8 +100,12 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
       } else {
         window.alert(result.error || "AI improvement failed.");
       }
-    } catch (e: any) {
-      window.alert("AI improvement failed: " + (e?.message || e));
+    } catch (e: unknown) {
+      if (typeof e === "object" && e !== null && "message" in e && typeof (e as { message?: string }).message === "string") {
+        window.alert("AI improvement failed: " + (e as { message: string }).message);
+      } else {
+        window.alert("AI improvement failed: " + String(e));
+      }
     } finally {
       setAiLoading(false);
     }

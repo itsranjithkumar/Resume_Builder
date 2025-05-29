@@ -78,11 +78,28 @@ export async function POST(req: NextRequest) {
     improved = improved.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
 
     return NextResponse.json({ text: improved, raw: data });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If the error has a status of 429, return a 429 response
-    if (error?.response?.status === 429) {
-      return NextResponse.json({ error: "Rate limit exceeded. Please try again later." }, { status: 429 });
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      'response' in error &&
+      typeof (error as { response?: { status?: number } }).response === 'object' &&
+      (error as { response?: { status?: number } }).response !== null
+    ) {
+      const response = (error as { response?: { status?: number } }).response;
+      if (
+        response &&
+        'status' in response &&
+        (response as { status?: number }).status === 429
+      ) {
+        return NextResponse.json({ error: "Rate limit exceeded. Please try again later." }, { status: 429 });
+      }
     }
-    return NextResponse.json({ error: error.message || "Unknown error" }, { status: 500 });
+    const message =
+      typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: string }).message === 'string'
+        ? (error as { message?: string }).message
+        : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

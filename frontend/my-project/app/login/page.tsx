@@ -35,7 +35,7 @@ export default function LoginPage() {
         localStorage.setItem("token", data.access_token)
         window.location.href = "/"
       }
-    } catch (err) {
+    } catch {
       setError("Network error")
     } finally {
       setLoading(false)
@@ -153,7 +153,7 @@ export default function LoginPage() {
 
             <div className="mt-8 text-center">
               <p className="text-gray-600">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link href="/register" className="text-black font-medium hover:underline">
                   Create an account
                 </Link>

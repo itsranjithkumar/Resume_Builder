@@ -96,8 +96,6 @@ export default function ResumePage() {
     }
   }, [resumeData]);
 
-  const [authChecked, setAuthChecked] = useState(false);
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -112,9 +110,8 @@ export default function ResumePage() {
         if (!res.ok) {
           localStorage.removeItem("token");
           router.push("/login");
-        } else {
-          setAuthChecked(true);
         }
+        // No need to set authChecked
       })
       .catch(() => {
         localStorage.removeItem("token");
