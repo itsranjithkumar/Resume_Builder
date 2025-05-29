@@ -18,7 +18,12 @@ interface ResumeFormProps {
   onPreview: () => void
 }
 
+import { useEffect } from "react";
+
 export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProps) {
+  useEffect(() => {
+    console.log("Resume JSON:", JSON.stringify(data, null, 2));
+  }, [data]);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [aiLoading, setAiLoading] = useState(false);
   // Per-field loading states
@@ -768,7 +773,11 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
 
       {/* Preview Button */}
       <div className="flex justify-center pt-8">
-        <Button onClick={onPreview} size="lg" className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3">
+        <Button
+          onClick={onPreview}
+          size="lg"
+          className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3"
+        >
           <Eye className="h-5 w-5 mr-2" />
           Preview Resume
         </Button>
