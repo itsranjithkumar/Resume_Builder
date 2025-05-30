@@ -19,6 +19,8 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const router = useRouter()
 
+  const USER_API_BASE_URL = process.env.NEXT_PUBLIC_USER_API_BASE_URL || "http://localhost:8000/api/users";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -28,7 +30,7 @@ export default function RegisterPage() {
     }
     setLoading(true)
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/users/register", {
+      const res = await fetch(`${USER_API_BASE_URL}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

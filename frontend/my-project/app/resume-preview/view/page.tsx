@@ -78,7 +78,7 @@ export default function ResumeViewPage() {
     if (data) {
       try {
         setResumeData(JSON.parse(data))
-      } catch (err) {
+      } catch {
         router.push("/resume-preview")
       }
     } else {
@@ -86,19 +86,6 @@ export default function ResumeViewPage() {
     }
   }, [router])
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "Present"
-    try {
-      const [year, month] = dateStr.split("-")
-      if (!year || !month) return dateStr
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-      const monthIndex = Number.parseInt(month) - 1
-      if (monthIndex < 0 || monthIndex > 11) return dateStr
-      return `${monthNames[monthIndex]} ${year}`
-    } catch {
-      return dateStr
-    }
-  }
 
   const handleDownloadPDF = () => {
     if (!resumeData) return

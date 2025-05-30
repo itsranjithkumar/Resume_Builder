@@ -7,69 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Eye, FileText, Sparkles, CheckCircle, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-interface PersonalInfo {
-  fullName: string
-  email: string
-  phone: string
-  location: string
-  linkedin: string
-  website: string
-  image: string
-}
 
-interface Experience {
-  id: string
-  company: string
-  position: string
-  location: string
-  startDate: string
-  endDate: string
-  current: boolean
-  description: string
-}
-
-interface Education {
-  id: string
-  institution: string
-  degree: string
-  field: string
-  startDate: string
-  endDate: string
-  gpa: string
-  location: string
-}
-
-interface Project {
-  id: string
-  name: string
-  description: string
-  technologies: string
-  link: string
-}
-
-interface Skill {
-  id: string
-  category: string
-  items: string
-}
-
-interface Certification {
-  id: string
-  name: string
-  issuer: string
-  date: string
-  link: string
-}
-
-interface ResumeData {
-  personalInfo: PersonalInfo
-  summary: string
-  experience: Experience[]
-  education: Education[]
-  projects: Project[]
-  skills: Skill[]
-  certifications: Certification[]
-}
 
 const sampleJSON = `{
   "personalInfo": {

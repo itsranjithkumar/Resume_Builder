@@ -103,7 +103,7 @@ export default function ResumePage() {
       return;
     }
     // Validate token with backend
-    fetch("http://127.0.0.1:8000/api/users/validate-token", {
+    fetch("https://resume-builder-koj8.onrender.com/api/users/validate-token", {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
