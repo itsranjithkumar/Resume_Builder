@@ -90,6 +90,11 @@ def upload_profile_picture(user_id: int, file: UploadFile = File(...), db: Sessi
         raise HTTPException(status_code=404, detail="User not found")
     return {"profile_picture": file_path}
 
+@router.options("/login")
+def options_login():
+    from fastapi import Response
+    return Response(status_code=200)
+
 @router.post("/login")
 def login(user: schemas.UserLogin, db: Session = Depends(database.get_db)):
     db_user = crud.authenticate_user(db, user.email, user.password)
