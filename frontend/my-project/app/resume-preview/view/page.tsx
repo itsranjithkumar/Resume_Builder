@@ -330,7 +330,6 @@ function ResumeContent({ data }: { data: ResumeData }) {
                         (line, idx) =>
                           line.trim() && (
                             <div key={idx} className="description-item mb-2 pl-4 relative">
-                              <span className="absolute left-0 text-gray-400">•</span>
                               {line.trim()}
                             </div>
                           ),
