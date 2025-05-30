@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Eye, FileText, Sparkles, CheckCircle, XCircle } from "lucide-react"
+import { Eye, FileText, Sparkles, CheckCircle, XCircle, ArrowLeft } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 
@@ -149,6 +149,16 @@ export default function ResumePreviewPage() {
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Transform your JSON data into a beautiful, professional resume
             </p>
+            <div className="flex justify-center mt-6">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/")}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                <span>Back to Form Fill Resume</span>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -215,22 +225,7 @@ export default function ResumePreviewPage() {
                   </Button>
                 </div>
 
-                {/* JSON Format Help */}
-                <div className="mt-8 p-6 bg-blue-50 rounded-2xl border border-blue-200">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-3">JSON Format Guide</h3>
-                  <div className="text-sm text-blue-800 space-y-2">
-                    <p>• Make sure your JSON is properly formatted with correct brackets and quotes</p>
-                    <p>
-                      • Required fields: <code className="bg-blue-100 px-2 py-1 rounded">personalInfo.fullName</code>
-                    </p>
-                    <p>
-                      • Use <code className="bg-blue-100 px-2 py-1 rounded">\n</code> for line breaks in descriptions
-                    </p>
-                    <p>
-                      • Dates should be in format: <code className="bg-blue-100 px-2 py-1 rounded">YYYY-MM</code>
-                    </p>
-                  </div>
-                </div>
+
               </div>
             </CardContent>
           </Card>

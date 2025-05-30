@@ -138,6 +138,13 @@ export default function ResumePage() {
               <h1 className="text-2xl font-bold text-gray-900">Resume Builder</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/resume-preview")}
+                className="flex items-center space-x-2 no-print"
+              >
+                <span>JSON Resume</span>
+              </Button>
               {currentView === "preview" && (
                 <Button variant="outline" onClick={handleBackToForm} className="flex items-center space-x-2 no-print">
                   <ArrowLeft className="h-4 w-4" />
