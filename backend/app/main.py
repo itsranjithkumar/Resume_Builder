@@ -23,5 +23,11 @@ app.add_middleware(
 app.include_router(user_routes.router, prefix="/api/users", tags=["Users"])
 app.include_router(resume_routes.router, prefix="/api/resumes", tags=["Resumes"])
 
+from fastapi import Request, Response
+
+@app.options("/{rest_of_path:path}")
+async def global_options_handler(rest_of_path: str, request: Request):
+    return Response(status_code=200)
+
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
