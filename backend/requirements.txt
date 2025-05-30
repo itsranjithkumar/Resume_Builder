@@ -80,6 +80,7 @@ platformdirs==4.3.6
 premailer==3.10.0
 protobuf==3.12.4
 
+reportlab==3.6.8
 psycopg2-binary==2.9.9
 ptyprocess==0.7.0
 pyasn1==0.6.1
