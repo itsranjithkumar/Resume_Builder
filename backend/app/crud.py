@@ -73,8 +73,7 @@ def delete_resume(db: Session, resume_id: int):
 
 import os
 import tempfile
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+
 
 def generate_resume_pdf(db: Session, resume_id: int):
     resume = db.query(models.Resume).filter(models.Resume.resume_id == resume_id).first()
