@@ -12,7 +12,6 @@ class User(Base):
     bio = Column(String, nullable=True)
     phone = Column(String, nullable=True)
     profile_picture = Column(String, nullable=True)  # stores file path or URL
-    role = Column(Text, nullable=True)  # comma-separated roles
 
     resumes = relationship("Resume", back_populates="owner")
 
