@@ -94,25 +94,7 @@ export default function LoginPage() {
               </div>
 
               <div className="mb-4">
-                <GoogleAuthButton
-                  onSuccess={async (credential) => {
-                    try {
-                      const res = await fetch(`${USER_API_BASE_URL}/google-login`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ token: credential }),
-                      });
-                      const data = await res.json();
-                      if (!res.ok) throw new Error(data.detail || "Login failed");
-                      setAuthToken(data.access_token);
-                      window.location.href = "/";
-                    } catch (err) {
-                      setError("Google sign-in failed");
-                    }
-                  }}
-                  onError={() => setError("Google sign-in failed")}
-                  buttonText="continue_with"
-                />
+                <GoogleAuthButton />
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
