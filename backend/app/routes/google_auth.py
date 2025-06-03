@@ -20,24 +20,30 @@ async def google_login(data: GoogleToken):
         )
         print("Decoded idinfo:", idinfo)
         email = idinfo.get("email")
-        name = idinfo.get("name")
+        name = idinfo.get("name") or ""
         if not email:
             print("No email in Google token!")
             raise HTTPException(status_code=400, detail="Google token missing email")
-        db = database.get_db()()
+        db_gen = database.get_db()
+        db = next(db_gen)
         user = db.query(models.User).filter_by(email=email).first()
         if not user:
             user = models.User(email=email, name=name, hashed_password="", role="user")
             db.add(user)
             db.commit()
             db.refresh(user)
+            print(f"Created new user: {email}")
+        else:
+            print(f"User exists: {email}")
         token = create_access_token({"sub": user.email})
-        db.close()
         print("Returning access token for:", email)
+        db_gen.close()
         return {"access_token": token, "token_type": "bearer"}
     except ValueError as e:
         print("ValueError in google_login:", str(e))
-        raise HTTPException(status_code=400, detail="Invalid Google token")
+        raise HTTPException(status_code=400, detail=f"Invalid Google token: {str(e)}")
     except Exception as e:
+        import traceback
         print("Exception in google_login:", str(e))
-        raise HTTPException(status_code=500, detail="Internal server error")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
