@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import user_routes, resume_routes
+from app.routes import google_auth
 import uvicorn
 
 app = FastAPI()
@@ -22,6 +23,7 @@ app.add_middleware(
 
 app.include_router(user_routes.router, prefix="/api/users", tags=["Users"])
 app.include_router(resume_routes.router, prefix="/api/resumes", tags=["Resumes"])
+app.include_router(google_auth.router, prefix="/api/users", tags=["Users"])
 
 from fastapi import Request, Response
 
