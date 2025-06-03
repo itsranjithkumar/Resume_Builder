@@ -28,7 +28,7 @@ async def google_login(data: GoogleToken):
         db = next(db_gen)
         user = db.query(models.User).filter_by(email=email).first()
         if not user:
-            user = models.User(email=email, name=name, hashed_password="", role="user")
+            user = models.User(email=email, full_name=name, hashed_password="", role="user")
             db.add(user)
             db.commit()
             db.refresh(user)
