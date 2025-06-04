@@ -30,6 +30,7 @@ export interface ResumeData {
     description: string
   }>
   education: Array<{
+    description: React.JSX.Element
     location: string
     id: string
     institution: string

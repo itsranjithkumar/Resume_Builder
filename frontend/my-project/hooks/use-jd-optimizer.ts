@@ -8,18 +8,21 @@ interface OptimizedResume {
   score: number
 }
 
+import { ResumeOptimizer, type AnalysisResult } from "@/app/utils/resume-optimizer"
+
 interface JDOptimizerState {
   jobDescription: string
   resumeContent: string
-  optimizedResume: OptimizedResume | null
+  optimizedResume?: AnalysisResult
   isOptimizing: boolean
+  // Optionally, you can add missingSkills here if you want to surface it separately
 }
 
 export function useJDOptimizer() {
   const [state, setState] = useState<JDOptimizerState>({
     jobDescription: "",
     resumeContent: "",
-    optimizedResume: null,
+    optimizedResume: undefined,
     isOptimizing: false,
   })
 
@@ -31,7 +34,7 @@ export function useJDOptimizer() {
     setState((prev) => ({ ...prev, resumeContent }))
   }, [])
 
-  const setOptimizedResume = useCallback((optimizedResume: OptimizedResume) => {
+  const setOptimizedResume = useCallback((optimizedResume?: AnalysisResult) => {
     setState((prev) => ({ ...prev, optimizedResume }))
   }, [])
 
@@ -43,18 +46,42 @@ export function useJDOptimizer() {
     setState({
       jobDescription: "",
       resumeContent: "",
-      optimizedResume: null,
+      optimizedResume: undefined,
       isOptimizing: false,
     })
   }, [])
 
-  const actions = {
-    setJobDescription,
-    setResumeContent,
-    setOptimizedResume,
-    setIsOptimizing,
-    resetState,
-  }
+  // Import ResumeOptimizer for AI logic
+  // (Import at the top: import { ResumeOptimizer } from "@/app/utils/resume-optimizer")
+  // But since this is a code chunk, add here:
+  // @ts-ignore
+  // eslint-disable-next-line
+  // const { ResumeOptimizer } = require("@/app/utils/resume-optimizer")
 
-  return { state, actions }
+  // Analyze and optimize resume content against job description
+  const optimizeResume = useCallback(() => {
+    setIsOptimizing(true)
+    try {
+      if (state.resumeContent && state.jobDescription) {
+        const result = ResumeOptimizer.analyzeAndOptimize(state.resumeContent, state.jobDescription)
+        setOptimizedResume(result)
+      }
+    } catch (error) {
+      setOptimizedResume(undefined)
+    } finally {
+      setIsOptimizing(false)
+    }
+  }, [state.resumeContent, state.jobDescription, setOptimizedResume, setIsOptimizing])
+
+  return {
+    state,
+    actions: {
+      setJobDescription,
+      setResumeContent,
+      setOptimizedResume,
+      setIsOptimizing,
+      resetState,
+      optimizeResume,
+    },
+  }
 }

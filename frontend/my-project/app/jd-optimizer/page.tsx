@@ -7,15 +7,13 @@ import { JDInputStep } from '@/components/jd-input-step'
 import { ResumeInputStep } from '@/components/resume-input-step'
 import { OptimizationStep } from '@/components/optimization-step'
 import { PreviewStep } from '@/components/preview-step'
-import { ExportStep } from '@/components/export-step'
 import { useJDOptimizer } from '@/hooks/use-jd-optimizer'
 
 const steps = [
   { id: 1, title: 'Job Description', description: 'Paste or upload the job description' },
   { id: 2, title: 'Your Resume', description: 'Upload your current resume' },
   { id: 3, title: 'AI Optimization', description: 'Let AI analyze and optimize' },
-  { id: 4, title: 'Live Preview', description: 'Review optimized resume' },
-  { id: 5, title: 'Export', description: 'Download your tailored resume' }
+  { id: 4, title: 'Live Preview', description: 'Review optimized resume' }
 ]
 
 export default function JDOptimizerPage() {
@@ -33,7 +31,7 @@ export default function JDOptimizerPage() {
       case 4:
         return <PreviewStep onNext={() => setCurrentStep(5)} onBack={() => setCurrentStep(3)} state={state} actions={actions} />
       case 5:
-        return <ExportStep onBack={() => setCurrentStep(4)} state={state} actions={actions} />
+        return null
       default:
         return null
     }
