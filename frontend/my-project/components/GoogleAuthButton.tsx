@@ -20,7 +20,12 @@ const GoogleAuthButton: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Login failed');
       localStorage.setItem('token', data.access_token);
-      window.location.href = 'http://localhost:3000/';
+      // Store user info for profile display
+      localStorage.setItem('user', JSON.stringify({
+        email: data.email,
+        fullName: data.full_name || data.name || ''
+      }));
+      window.location.href = '/';
     } catch (err: any) {
       setError('Google sign-in failed. Please try again.');
     } finally {

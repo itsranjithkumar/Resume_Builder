@@ -316,6 +316,7 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
                 placeholder="linkedin.com/in/johndoe"
               />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="website">Website/Portfolio</Label>
               <Input
@@ -325,6 +326,8 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
                 placeholder="johndoe.com"
               />
             </div>
+            {/* If odd number of fields, add empty div for alignment */}
+            <div className="hidden md:block"></div>
           </div>
         </CardContent>
       </Card>
@@ -339,14 +342,15 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <Label htmlFor="summary">Summary</Label>
-            <Textarea
-              id="summary"
-              value={data.summary}
-              onChange={(e) => updateSummary(e.target.value)}
-              placeholder="Write a compelling professional summary that highlights your key achievements and career objectives..."
-              rows={4}
-            />
+            <Label>Summary</Label>
+            <div className="flex gap-2 items-end">
+              <Textarea
+                value={data.summary}
+                onChange={(e) => updateSummary(e.target.value)}
+                placeholder="Write a compelling professional summary that highlights your key achievements and career objectives..."
+                rows={4}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -377,7 +381,7 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Company *</Label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-end">
                     <Input
                       value={exp.company}
                       onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
@@ -395,63 +399,73 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
                 </div>
                 <div className="space-y-2">
                   <Label>Position *</Label>
-                  <Input
-                    value={exp.position}
-                    onChange={(e) => updateExperience(exp.id, "position", e.target.value)}
-                    placeholder="Senior Software Engineer"
-                  />
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      value={exp.position}
+                      onChange={(e) => updateExperience(exp.id, "position", e.target.value)}
+                      placeholder="Senior Software Engineer"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Location</Label>
-                  <Input
-                    value={exp.location}
-                    onChange={(e) => updateExperience(exp.id, "location", e.target.value)}
-                    placeholder="Mountain View, CA"
-                  />
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      value={exp.location}
+                      onChange={(e) => updateExperience(exp.id, "location", e.target.value)}
+                      placeholder="Mountain View, CA"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Start Date</Label>
-                  <Input
-                    type="month"
-                    value={exp.startDate}
-                    onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)}
-                  />
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      type="month"
+                      value={exp.startDate}
+                      onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>End Date</Label>
-                  <Input
-                    type="month"
-                    value={exp.endDate}
-                    onChange={(e) => updateExperience(exp.id, "endDate", e.target.value)}
-                    disabled={exp.current}
-                  />
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      type="month"
+                      value={exp.endDate}
+                      onChange={(e) => updateExperience(exp.id, "endDate", e.target.value)}
+                      disabled={exp.current}
+                    />
+                  </div>
                 </div>
                 <div className="flex items-center space-x-2 pt-6">
                   <Checkbox
                     id={`current-${exp.id}`}
                     checked={exp.current}
-                    onCheckedChange={(checked) => updateExperience(exp.id, "current", checked)}
+                    onCheckedChange={(checked: string | boolean) => updateExperience(exp.id, "current", checked)}
                   />
                   <Label htmlFor={`current-${exp.id}`}>Currently working here</Label>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Job Description</Label>
-                <div className="flex gap-2">
-                  <Textarea
-                    value={exp.description}
-                    onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
-                    placeholder="• Led a team of 5 engineers to develop scalable web applications&#10;• Improved system performance by 40% through optimization&#10;• Implemented CI/CD pipelines reducing deployment time by 60%"
-                    rows={4}
-                  />
-                  <Button
-                    onClick={() => improveFieldWithAI('experience', exp.id, 'description', exp.description)}
-                    disabled={!!experienceAiLoading[exp.id]?.description}
-                    variant="outline"
-                    size="sm"
-                  >
-                    {experienceAiLoading[exp.id]?.description ? "Improving..." : "Improve with AI"}
-                  </Button>
+                {/* If odd number of fields, add empty div for grid balance */}
+                <div className="hidden md:block"></div>
+                <div className="col-span-1 md:col-span-2 space-y-2">
+                  <Label>Job Description</Label>
+                  <div className="flex gap-2 items-end">
+                    <Textarea
+                      value={exp.description}
+                      onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
+                      placeholder="• Led a team of 5 engineers to develop scalable web applications&#10;• Improved system performance by 40% through optimization&#10;• Implemented CI/CD pipelines reducing deployment time by 60%"
+                      rows={4}
+                    />
+                    <Button
+                      onClick={() => improveFieldWithAI('experience', exp.id, 'description', exp.description)}
+                      disabled={!!experienceAiLoading[exp.id]?.description}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {experienceAiLoading[exp.id]?.description ? "Improving..." : "Improve with AI"}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

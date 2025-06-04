@@ -89,14 +89,6 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
 
   return (
     <div className="max-w-6xl mx-auto pt-0 mt-0">
-      {/* Download Button */}
-      <div className="flex justify-end mb-6 no-print print:hidden">
-        <Button onClick={handleDownloadPDF} className="bg-blue-600 hover:bg-blue-700 text-white">
-          <Download className="h-4 w-4 mr-2" />
-          Download PDF
-        </Button>
-      </div>
-
       {/* Resume Content */}
       <div
         id="resume-content"

@@ -79,7 +79,74 @@ const initialData: ResumeData = {
 }
 
 export default function ResumePage() {
+  const handleDownloadPDF = async () => {
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const jsPDF = (await import("jspdf")).default;
+      const element = document.getElementById("resume-content");
+      if (!element) return;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "in", format: [8.5, 11] });
+      const pdfWidth = 8.5;
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = pdfWidth / (imgWidth / 192);
+      const finalWidth = pdfWidth;
+      const finalHeight = (imgHeight / 192) * ratio;
+      pdf.addImage(imgData, "PNG", 0, 0, finalWidth, finalHeight);
+      const fileName = `${resumeData.personalInfo.fullName || "Resume"}_Resume.pdf`;
+      pdf.save(fileName);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      window.print();
+    }
+  };
+
   const router = useRouter()
+  const [user, setUser] = useState<{ email: string; fullName: string } | null>(null);
+
+  useEffect(() => {
+    // Load user info from localStorage (assume backend sets this on login)
+    if (typeof window !== "undefined") {
+      const handleStorage = () => {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          try {
+            setUser(JSON.parse(userStr));
+            console.log("User loaded:", JSON.parse(userStr));
+          } catch {
+            setUser(null);
+            console.log("User parse error");
+          }
+        } else {
+          setUser(null);
+          console.log("No user in localStorage");
+        }
+      };
+      handleStorage();
+      window.addEventListener("storage", handleStorage);
+      return () => window.removeEventListener("storage", handleStorage);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
+
   const [resumeData, setResumeData] = useState<ResumeData>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("resumeData");
@@ -157,6 +224,12 @@ export default function ResumePage() {
                   <span>Preview Resume</span>
                 </Button>
               )}
+              {/* Auth Only: Show Login/Logout, no profile */}
+              {user ? (
+                <Button variant="outline" size="sm" onClick={handleLogout}>Logout</Button>
+              ) : (
+                <Button variant="outline" onClick={() => router.push("/login")}>Login</Button>
+              )}
             </div>
           </div>
         </div>
@@ -169,9 +242,15 @@ export default function ResumePage() {
             <ResumeForm data={resumeData} onChange={setResumeData} onPreview={handlePreview} />
           ) : (
             <>
-              <Button variant="outline" onClick={handleBackToForm} className="mb-6 no-print print:hidden">
-                Back to Edit
-              </Button>
+              <div className="flex justify-end gap-4 mb-6 no-print print:hidden">
+                <Button variant="outline" onClick={handleBackToForm}>
+                  Back to Edit
+                </Button>
+                <Button onClick={handleDownloadPDF} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" /></svg>
+                  Download PDF
+                </Button>
+              </div>
               <ResumePreview data={resumeData} />
             </>
           )}

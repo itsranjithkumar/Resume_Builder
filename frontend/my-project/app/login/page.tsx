@@ -38,8 +38,13 @@ export default function LoginPage() {
       if (!res.ok) {
         setError(data.detail || "Invalid credentials")
       } else {
-        // Store JWT token and redirect to home
+        // Store JWT token and user info, then redirect to home
         localStorage.setItem("token", data.access_token)
+        // Store user info for profile display
+        localStorage.setItem("user", JSON.stringify({
+          email: data.email,
+          fullName: data.full_name || data.name || ""
+        }))
         window.location.href = "/"
       }
     } catch {
