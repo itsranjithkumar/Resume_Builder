@@ -2,31 +2,85 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Eye, Download, ArrowLeft, ArrowRight, TrendingUp, CheckCircle } from "lucide-react"
+import {
+  Eye,
+  Download,
+  ArrowLeft,
+  ArrowRight,
+  TrendingUp,
+  CheckCircle,
+  AlertCircle,
+  Target,
+  FileText,
+  BarChart3,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "../components/ui/progress"
+import { Progress } from "@/components/ui/progress"
+import { ResumeOptimizer, type AnalysisResult } from "@/app/utils/resume-optimizer"
 
 interface PreviewStepProps {
   onNext: () => void
   onBack: () => void
-  state: any
+  state: {
+    resumeContent: string
+    jobDescription: string
+    optimizedResume?: AnalysisResult
+  }
   actions: any
 }
 
+// Show a diff of content improvements in the sidebar, above skills analysis
 export function PreviewStep({ onNext, onBack, state, actions }: PreviewStepProps) {
   const [activeTab, setActiveTab] = useState("preview")
+  const [isOptimizing, setIsOptimizing] = useState(false)
 
-  const improvements = [
-    { type: "added", text: "Added 15 relevant keywords for better ATS compatibility", impact: "high" },
-    { type: "enhanced", text: "Enhanced 8 bullet points with quantified achievements", impact: "high" },
-    { type: "improved", text: "Improved technical skills section alignment", impact: "medium" },
-    { type: "optimized", text: "Optimized formatting for better readability", impact: "medium" },
-    { type: "strengthened", text: "Strengthened professional summary", impact: "high" },
-  ]
+  // Perform optimization if not already done
+  const optimizedResume =
+    state.optimizedResume ||
+    (() => {
+      if (state.resumeContent && state.jobDescription) {
+        return ResumeOptimizer.analyzeAndOptimize(state.resumeContent, state.jobDescription)
+      }
+      return null
+    })()
 
-  const matchScore = 92
+  const handleOptimize = async () => {
+    if (!state.resumeContent || !state.jobDescription) return
+
+    setIsOptimizing(true)
+    try {
+      // Simulate processing time for better UX
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+
+      const result = ResumeOptimizer.analyzeAndOptimize(state.resumeContent, state.jobDescription)
+      actions.setOptimizedResume(result)
+    } catch (error) {
+      console.error("Optimization failed:", error)
+    } finally {
+      setIsOptimizing(false)
+    }
+  }
+
+  if (!optimizedResume) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-12">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl mb-6">
+          <FileText className="w-8 h-8 text-white" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-4">Ready to Optimize</h2>
+        <p className="text-slate-600 mb-8">Click below to analyze your resume and generate optimization suggestions.</p>
+        <Button
+          onClick={handleOptimize}
+          disabled={isOptimizing}
+          className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-medium"
+        >
+          {isOptimizing ? "Analyzing..." : "Optimize Resume"}
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -36,7 +90,7 @@ export function PreviewStep({ onNext, onBack, state, actions }: PreviewStepProps
         </div>
         <h2 className="text-3xl font-bold text-slate-900 mb-4">Your Optimized Resume</h2>
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-          Review your AI-optimized resume with live feedback and actionable insights.
+          AI-powered analysis complete with personalized feedback and actionable improvements.
         </p>
       </motion.div>
 
@@ -47,76 +101,13 @@ export function PreviewStep({ onNext, onBack, state, actions }: PreviewStepProps
             <CardHeader className="pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl font-semibold">Resume Preview</CardTitle>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    Match Score: {matchScore}%
-                  </Badge>
-                  <Button variant="outline" size="sm">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download PDF
-                  </Button>
-                </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="bg-white border border-slate-200 rounded-lg p-8 min-h-[600px] shadow-inner">
-                {/* Resume Content Preview */}
                 <div className="space-y-6">
-                  <div className="text-center border-b border-slate-200 pb-6">
-                    <h1 className="text-2xl font-bold text-slate-900 mb-2">John Doe</h1>
-                    <p className="text-slate-600">Senior Software Engineer</p>
-                    <p className="text-sm text-slate-500 mt-2">
-                      john.doe@email.com • (555) 123-4567 • LinkedIn: /in/johndoe
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-3 border-b border-slate-200 pb-1">
-                      Professional Summary
-                    </h2>
-                    <p className="text-slate-700 leading-relaxed">
-                      Results-driven Senior Software Engineer with 8+ years of experience developing scalable web
-                      applications and leading cross-functional teams. Proven track record of delivering high-quality
-                      solutions that increased system performance by 40% and reduced deployment time by 60%.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-3 border-b border-slate-200 pb-1">
-                      Technical Skills
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="font-medium text-slate-800 mb-1">Languages:</p>
-                        <p className="text-slate-600 text-sm">JavaScript, TypeScript, Python, Java</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-800 mb-1">Frameworks:</p>
-                        <p className="text-slate-600 text-sm">React, Next.js, Node.js, Express</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-3 border-b border-slate-200 pb-1">
-                      Professional Experience
-                    </h2>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-semibold text-slate-900">Senior Software Engineer</h3>
-                            <p className="text-slate-600">Tech Company Inc.</p>
-                          </div>
-                          <p className="text-slate-500 text-sm">2020 - Present</p>
-                        </div>
-                        <ul className="list-disc list-inside space-y-1 text-slate-700 text-sm ml-4">
-                          <li>Led development of microservices architecture, improving system scalability by 300%</li>
-                          <li>Implemented CI/CD pipelines reducing deployment time from 2 hours to 15 minutes</li>
-                          <li>Mentored 5 junior developers and conducted code reviews for team of 12</li>
-                        </ul>
-                      </div>
-                    </div>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                    {optimizedResume.optimizedContent || state.resumeContent || "No resume content available"}
                   </div>
                 </div>
               </div>
@@ -126,45 +117,149 @@ export function PreviewStep({ onNext, onBack, state, actions }: PreviewStepProps
 
         {/* Sidebar with Insights */}
         <div className="space-y-6">
-          {/* Match Score */}
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-slate-900">Job Match Score</h3>
-                <TrendingUp className="w-5 h-5 text-green-600" />
-              </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-green-600">{matchScore}%</span>
-                  <Badge className="bg-green-600 text-white">Excellent</Badge>
+          {/* Key Metrics */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg flex items-center">
+                <BarChart3 className="w-5 h-5 text-blue-600 mr-2" />
+                Key Metrics
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">{optimizedResume.keyMetrics.skillsMatched}</div>
+                  <div className="text-xs text-slate-600">Skills Matched</div>
                 </div>
-                <Progress value={matchScore} className="h-2" />
-                <p className="text-sm text-slate-600">Your resume is highly optimized for this position</p>
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {optimizedResume.keyMetrics.quantifiedAchievements}
+                  </div>
+                  <div className="text-xs text-slate-600">Quantified Results</div>
+                </div>
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {optimizedResume.keyMetrics.improvementsMade}
+                  </div>
+                  <div className="text-xs text-slate-600">Improvements</div>
+                </div>
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {optimizedResume.keyMetrics.readabilityScore}
+                  </div>
+                  <div className="text-xs text-slate-600">Readability</div>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Improvements */}
+          {/* Skills Analysis */}
           <Card className="border-0 shadow-lg">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                AI Improvements
+                <Target className="w-5 h-5 text-blue-600 mr-2" />
+                Skills Analysis
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {improvements.map((improvement, index) => (
-                <div key={index} className="flex items-start space-x-3 p-3 bg-slate-50 rounded-lg">
-                  <div
-                    className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
-                      improvement.impact === "high" ? "bg-green-500" : "bg-blue-500"
-                    }`}
-                  />
-                  <p className="text-sm text-slate-700">{improvement.text}</p>
+            <CardContent className="space-y-4">
+              {optimizedResume.foundSkills.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-green-700 mb-2 flex items-center">
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    Matched Skills ({optimizedResume.foundSkills.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {optimizedResume.foundSkills.slice(0, 8).map((skill: string, index: number) => (
+                      <Badge key={index} variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                    {optimizedResume.foundSkills.length > 8 && (
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                        +{optimizedResume.foundSkills.length - 8} more
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-              ))}
+              )}
+
+              {optimizedResume.missingSkills.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-red-700 mb-2 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    Missing Skills ({optimizedResume.missingSkills.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {optimizedResume.missingSkills.slice(0, 6).map((skill: string, index: number) => (
+                      <Badge key={index} variant="secondary" className="bg-red-100 text-red-800 text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                    {optimizedResume.missingSkills.length > 6 && (
+                      <Badge variant="secondary" className="bg-red-100 text-red-800 text-xs">
+                        +{optimizedResume.missingSkills.length - 6} more
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
+
+          {/* Content Improvements */}
+          {optimizedResume.suggestions && optimizedResume.suggestions.filter((s) => s.type === "content").length > 0 && (
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center">
+                  <FileText className="w-5 h-5 text-blue-600 mr-2" />
+                  Content Improvements
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {optimizedResume.suggestions.filter((s) => s.type === "content").slice(0, 4).map((s, idx) => (
+                  <div key={idx} className="p-3 bg-slate-50 rounded-lg">
+                    <div className="text-xs text-slate-500 mb-1">{s.section === "experience" ? "Experience" : "Content"}</div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-slate-600">Before:</span>
+                      <span className="text-sm text-red-700 font-mono bg-red-50 rounded px-1 py-0.5 whitespace-pre-wrap">{s.before}</span>
+                      <span className="text-xs text-slate-600 mt-1">After:</span>
+                      <span className="text-sm text-green-800 font-mono bg-green-50 rounded px-1 py-0.5 whitespace-pre-wrap">{s.after}</span>
+                    </div>
+                  </div>
+                ))}
+                {optimizedResume.suggestions.filter((s) => s.type === "content").length > 4 && (
+                  <p className="text-xs text-slate-500 text-center pt-2">
+                    +{optimizedResume.suggestions.filter((s) => s.type === "content").length - 4} more content recommendations available
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Top Recommendations (Skills, Structure, etc) */}
+          {optimizedResume.improvements.length > 0 && (
+            <Card className="border-0 shadow-lg">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                  Top Recommendations
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {optimizedResume.improvements.slice(0, 4).map((improvement: string, index: number) => (
+                  <div key={index} className="flex items-start space-x-3 p-3 bg-slate-50 rounded-lg">
+                    <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0 bg-blue-500" />
+                    <p className="text-sm text-slate-700 leading-relaxed">{improvement}</p>
+                  </div>
+                ))}
+                {optimizedResume.improvements.length > 4 && (
+                  <p className="text-xs text-slate-500 text-center pt-2">
+                    +{optimizedResume.improvements.length - 4} more detailed recommendations available
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Quick Actions */}
           <Card className="border-0 shadow-lg">
@@ -172,17 +267,9 @@ export function PreviewStep({ onNext, onBack, state, actions }: PreviewStepProps
               <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full justify-start">
-                <Download className="w-4 h-4 mr-2" />
-                Download as PDF
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Download className="w-4 h-4 mr-2" />
-                Download as Word
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Eye className="w-4 h-4 mr-2" />
-                View Full Screen
+              <Button variant="outline" className="w-full justify-start" onClick={handleOptimize}>
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Re-analyze Resume
               </Button>
             </CardContent>
           </Card>
@@ -192,15 +279,9 @@ export function PreviewStep({ onNext, onBack, state, actions }: PreviewStepProps
       <div className="flex justify-between mt-8">
         <Button onClick={onBack} variant="outline" className="px-6 py-3 rounded-xl font-medium">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Optimization
+          Back to Upload
         </Button>
-        <Button
-          onClick={onNext}
-          className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-medium shadow-lg shadow-indigo-600/25 transition-all duration-200 hover:shadow-xl hover:shadow-indigo-600/30"
-        >
-          Export Resume
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
+
       </div>
     </div>
   )

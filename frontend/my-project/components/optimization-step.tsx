@@ -38,19 +38,9 @@ export function OptimizationStep({ onNext, onBack, state, actions }: Optimizatio
       return () => clearTimeout(timer)
     } else {
       setIsComplete(true)
-      // Simulate setting optimized resume
-      actions.setOptimizedResume({
-        content: "Optimized resume content...",
-        improvements: [
-          "Added 15 relevant keywords",
-          "Enhanced 8 bullet points",
-          "Improved ATS compatibility by 85%",
-          "Strengthened impact statements",
-        ],
-        score: 92,
-      })
+      // Do NOT setOptimizedResume here. It is already set by the AI logic in the hook.
     }
-  }, [currentStepIndex, actions])
+  }, [currentStepIndex])
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -59,6 +49,25 @@ export function OptimizationStep({ onNext, onBack, state, actions }: Optimizatio
           <Brain className="w-8 h-8 text-white" />
         </div>
         <h2 className="text-3xl font-bold text-slate-900 mb-4">AI is Optimizing Your Resume</h2>
+        {isComplete && state.optimizedResume && (
+          <div className="mt-8 text-left max-w-2xl mx-auto">
+            <h3 className="text-xl font-semibold mb-2">AI Improvements</h3>
+            <ul className="list-disc pl-6 mb-4">
+              {state.optimizedResume.improvements.length === 0 ? (
+                <li>No improvements needed. Your resume is already well-optimized for this JD!</li>
+              ) : (
+                state.optimizedResume.improvements.map((imp: string, idx: number) => (
+                  <li key={idx}>{imp}</li>
+                ))
+              )}
+            </ul>
+            <div className="mb-2">
+              <strong>Job Match Score:</strong> {state.optimizedResume.score}%<br />
+              {state.optimizedResume.score >= 90 ? "Excellent" : state.optimizedResume.score >= 75 ? "Good" : "Needs Improvement"}
+            </div>
+          </div>
+        )}
+      
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
           Our advanced AI is analyzing the job requirements and tailoring your resume for maximum impact. This will take
           just a moment.
