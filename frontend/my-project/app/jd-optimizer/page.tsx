@@ -1,80 +1,242 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { StepIndicator } from '@/components/step-indicator'
-import { JDInputStep } from '@/components/jd-input-step'
-import { ResumeInputStep } from '@/components/resume-input-step'
-import { OptimizationStep } from '@/components/optimization-step'
-import { PreviewStep } from '@/components/preview-step'
-import { useJDOptimizer } from '@/hooks/use-jd-optimizer'
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Sparkles, Download, Copy, TrendingUp, Target, Zap } from "lucide-react"
+import { ResumeUpload } from "@/components/resume-upload"
+import { JobDescriptionInput } from "@/components/job-description-input"
+import { AnalysisResults } from "@/components/analysis-results"
+import { ResumeEditor } from "@/components/resume-editor"
+import { OptimizationStats } from "@/components/optimization-stats"
 
-const steps = [
-  { id: 1, title: 'Job Description', description: 'Paste or upload the job description' },
-  { id: 2, title: 'Your Resume', description: 'Upload your current resume' },
-  { id: 3, title: 'AI Optimization', description: 'Let AI analyze and optimize' },
-  { id: 4, title: 'Live Preview', description: 'Review optimized resume' }
-]
+// DUMMY AI FUNCTIONS - Replace these with real AI integration
+const analyzeResumeAndJD = async (resume: string, jobDescription: string) => {
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 2000))
+
+  return {
+    matchScore: 72,
+    missingSkills: ["React.js", "TypeScript", "AWS", "Docker", "Kubernetes", "GraphQL"],
+    suggestedImprovements: [
+      {
+        section: "Skills",
+        current: "JavaScript, HTML, CSS",
+        suggested: "JavaScript, TypeScript, React.js, HTML5, CSS3, GraphQL",
+        reason: "Add TypeScript and React.js as they are mentioned 8 times in the job description",
+      },
+      {
+        section: "Experience",
+        current: "Developed web applications",
+        suggested: "Developed scalable web applications using React.js and TypeScript, deployed on AWS infrastructure",
+        reason: "Include specific technologies and cloud platform mentioned in JD",
+      },
+      {
+        section: "Projects",
+        current: "Built e-commerce website",
+        suggested:
+          "Built responsive e-commerce platform with React.js frontend and Node.js backend, containerized with Docker",
+        reason: "Highlight containerization and specific tech stack",
+      },
+    ],
+    keywordDensity: {
+      React: { resume: 0, jd: 8, status: "missing" },
+      TypeScript: { resume: 0, jd: 5, status: "missing" },
+      JavaScript: { resume: 3, jd: 4, status: "good" },
+      AWS: { resume: 0, jd: 6, status: "missing" },
+      Docker: { resume: 0, jd: 3, status: "missing" },
+    },
+  }
+}
 
 export default function JDOptimizerPage() {
-  const [currentStep, setCurrentStep] = useState(1)
-  const { state, actions } = useJDOptimizer()
+  const [step, setStep] = useState<"input" | "analyzing" | "results">("input")
+  const [resume, setResume] = useState("")
+  const [jobDescription, setJobDescription] = useState("")
+  const [analysisResults, setAnalysisResults] = useState<any>(null)
+  const [optimizedResume, setOptimizedResume] = useState("")
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return <JDInputStep onNext={() => setCurrentStep(2)} state={state} actions={actions} />
-      case 2:
-        return <ResumeInputStep onNext={() => setCurrentStep(3)} onBack={() => setCurrentStep(1)} state={state} actions={actions} />
-      case 3:
-        return <OptimizationStep onNext={() => setCurrentStep(4)} onBack={() => setCurrentStep(2)} state={state} actions={actions} />
-      case 4:
-        return <PreviewStep onNext={() => setCurrentStep(5)} onBack={() => setCurrentStep(3)} state={state} actions={actions} />
-      case 5:
-        return null
-      default:
-        return null
+  const handleAnalyze = async () => {
+    if (!resume || !jobDescription) return
+
+    setIsAnalyzing(true)
+    setStep("analyzing")
+
+    try {
+      // DUMMY AI CALL - Replace with real AI service
+      const results = await analyzeResumeAndJD(resume, jobDescription)
+      setAnalysisResults(results)
+      setOptimizedResume(resume) // Start with original resume
+      setStep("results")
+    } catch (error) {
+      console.error("Analysis failed:", error)
+    } finally {
+      setIsAnalyzing(false)
     }
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
-      {/* Header */}
-      <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">JD</span>
+  const handleApplySuggestion = (suggestion: any) => {
+    // DUMMY AI FUNCTION - Replace with real implementation
+    const updatedResume = optimizedResume.replace(suggestion.current, suggestion.suggested)
+    setOptimizedResume(updatedResume)
+  }
+
+  const handleDownload = () => {
+    const blob = new Blob([optimizedResume], { type: "text/plain" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "optimized-resume.txt"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(optimizedResume)
+  }
+
+  if (step === "analyzing") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <Sparkles className="w-8 h-8 text-white animate-pulse" />
               </div>
-              <h1 className="text-xl font-semibold text-slate-900">Resume Optimizer</h1>
+              <div>
+                <h3 className="text-lg font-semibold">Analyzing Your Resume</h3>
+                <p className="text-sm text-muted-foreground">
+                  Our AI is comparing your resume with the job description...
+                </p>
+              </div>
+              <Progress value={65} className="w-full" />
+              <p className="text-xs text-muted-foreground">This may take a few moments</p>
             </div>
-            <div className="text-sm text-slate-500">
-              Step {currentStep} of {steps.length}
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (step === "results") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <Button variant="ghost" onClick={() => setStep("input")} className="mb-4">
+              ← Back to Input
+            </Button>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Optimization Results
+                </h1>
+                <p className="text-muted-foreground">AI-powered resume analysis and suggestions</p>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleCopy} variant="outline" size="sm">
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy
+                </Button>
+                <Button onClick={handleDownload} size="sm">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </div>
             </div>
           </div>
+
+          <OptimizationStats results={analysisResults} />
+
+          <div className="grid lg:grid-cols-2 gap-6 mt-6">
+            <AnalysisResults results={analysisResults} onApplySuggestion={handleApplySuggestion} />
+            <ResumeEditor resume={optimizedResume} onChange={setOptimizedResume} />
+          </div>
         </div>
-      </header>
-
-      {/* Progress Indicator */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <StepIndicator steps={steps} currentStep={currentStep} />
       </div>
+    )
+  }
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 pb-12">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentStep}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl mb-6">
+            <Target className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+            JD Optimizer
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Tailor your resume to any job description using AI. Increase your chances of passing ATS and impressing
+            recruiters.
+          </p>
+        </div>
+
+        {/* Features */}
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur">
+            <CardContent className="pt-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-4">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-semibold mb-2">AI-Powered Analysis</h3>
+              <p className="text-sm text-muted-foreground">
+                Advanced AI compares your resume with job requirements to identify gaps and opportunities.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur">
+            <CardContent className="pt-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-4">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-semibold mb-2">ATS Optimization</h3>
+              <p className="text-sm text-muted-foreground">
+                Ensure your resume passes Applicant Tracking Systems with keyword optimization.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur">
+            <CardContent className="pt-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-semibold mb-2">Real-time Editing</h3>
+              <p className="text-sm text-muted-foreground">
+                Apply AI suggestions instantly and see your resume improve in real-time.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Input Section */}
+        <div className="grid lg:grid-cols-2 gap-8">
+          <ResumeUpload resume={resume} onResumeChange={setResume} />
+
+          <JobDescriptionInput jobDescription={jobDescription} onJobDescriptionChange={setJobDescription} />
+        </div>
+
+        {/* Analyze Button */}
+        <div className="text-center mt-8">
+          <Button
+            onClick={handleAnalyze}
+            disabled={!resume || !jobDescription || isAnalyzing}
+            size="lg"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            {renderStep()}
-          </motion.div>
-        </AnimatePresence>
-      </main>
+            <Sparkles className="w-5 h-5 mr-2" />
+            {isAnalyzing ? "Analyzing..." : "Optimize My Resume"}
+          </Button>
+          <p className="text-sm text-muted-foreground mt-2">AI analysis typically takes 30-60 seconds</p>
+        </div>
+      </div>
     </div>
   )
 }

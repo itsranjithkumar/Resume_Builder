@@ -20,6 +20,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "GitHub token missing" }, { status: 500 });
   }
 
+  // Helper: Check if input is truly instructions or empty
+  function looksLikeInstructions(input: string) {
+    const lower = input.trim().toLowerCase();
+    return (
+      !lower ||
+      lower.includes('system instructions') ||
+      lower.startsWith('[no text') ||
+      lower.startsWith('please enter') ||
+      lower.startsWith('type your')
+    );
+  }
+
+  if (looksLikeInstructions(text)) {
+    return NextResponse.json({ error: "Please enter your real resume content for optimization." }, { status: 400 });
+  }
+
   // Skip AI improvement for email or simple name
   if (isEmail(text) || isSimpleName(text)) {
     return NextResponse.json({ text: text.trim(), raw: null });
@@ -76,6 +92,15 @@ export async function POST(req: NextRequest) {
 
     // Remove Markdown bold (**text**) and italic (*text*) formatting
     improved = improved.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1');
+
+    // If improved is empty or unchanged from input, return the input (unless input is blank/instructions)
+    if (!improved || improved === text.trim()) {
+      if (looksLikeInstructions(text)) {
+        return NextResponse.json({ error: "Please enter your real resume content for optimization." }, { status: 400 });
+      }
+      // Accept and return the original text if it's real resume content
+      return NextResponse.json({ text: text.trim(), raw: data });
+    }
 
     return NextResponse.json({ text: improved, raw: data });
   } catch (error: unknown) {

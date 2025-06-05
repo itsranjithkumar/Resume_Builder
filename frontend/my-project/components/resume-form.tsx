@@ -19,21 +19,28 @@ interface ResumeFormProps {
 }
 
 import { useEffect } from "react";
+import { useAIFieldImprover } from "@/hooks/use-ai-field-improver";
 
 export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProps) {
   useEffect(() => {
     console.log("Resume JSON:", JSON.stringify(data, null, 2));
   }, [data]);
   const [imagePreview, setImagePreview] = useState<string>("");
-  const [aiLoading, setAiLoading] = useState(false);
+  // Remove old summary AI loading state
   // Per-field loading states
   const [experienceAiLoading, setExperienceAiLoading] = useState<Record<string, Record<string, boolean>>>({});
+const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, { missing: string[]; improve: string[]; suggested?: string }>>({});
   const [educationAiLoading, setEducationAiLoading] = useState<Record<string, Record<string, boolean>>>({});
   const [projectAiLoading, setProjectAiLoading] = useState<Record<string, Record<string, boolean>>>({});
   const [certificationAiLoading, setCertificationAiLoading] = useState<Record<string, Record<string, boolean>>>({});
 
   // Generic AI improvement handler for any field
-  const improveFieldWithAI = async (section: string, id: string, field: string, value: string) => {
+  const improveFieldWithAI = async (
+    section: 'experience' | 'education' | 'project' | 'certification',
+    id: string,
+    field: string,
+    value: string
+  ) => {
     let setLoading: React.Dispatch<React.SetStateAction<Record<string, Record<string, boolean>>>>;
     switch (section) {
       case 'experience': setLoading = setExperienceAiLoading; break;
@@ -51,18 +58,29 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
       });
       const result = await res.json();
       if (res.ok && result.text) {
+        // Handle AI feedback for experience section
+        if (section === 'experience' && result.feedback) {
+          setExperienceAiFeedback(prev => ({
+            ...prev,
+            [id]: {
+              missing: result.feedback.missing || [],
+              improve: result.feedback.improve || [],
+              suggested: result.feedback.suggested || undefined
+            }
+          }));
+        }
         // Update the correct section/field
         if (section === 'experience') {
-          const updated = data.experience.map((exp) => exp.id === id ? { ...exp, [field]: result.text } : exp);
+          const updated = data.experience.map((exp: typeof data.experience[number]) => exp.id === id ? { ...exp, [field]: result.text } : exp);
           onChange({ ...data, experience: updated });
         } else if (section === 'education') {
-          const updated = data.education.map((edu) => edu.id === id ? { ...edu, [field]: result.text } : edu);
+          const updated = data.education.map((edu: typeof data.education[number]) => edu.id === id ? { ...edu, [field]: result.text } : edu);
           onChange({ ...data, education: updated });
         } else if (section === 'project') {
-          const updated = data.projects.map((proj) => proj.id === id ? { ...proj, [field]: result.text } : proj);
+          const updated = data.projects.map((proj: typeof data.projects[number]) => proj.id === id ? { ...proj, [field]: result.text } : proj);
           onChange({ ...data, projects: updated });
         } else if (section === 'certification') {
-          const updated = data.certifications.map((cert) => cert.id === id ? { ...cert, [field]: result.text } : cert);
+          const updated = data.certifications.map((cert: typeof data.certifications[number]) => cert.id === id ? { ...cert, [field]: result.text } : cert);
           onChange({ ...data, certifications: updated });
         }
         window.alert("Field improved with AI!");
@@ -79,35 +97,30 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
       setLoading((prev) => ({ ...prev, [id]: { ...prev[id], [field]: false } }));
     }
   };
+// --- END improveFieldWithAI ---
+// (Removed all duplicate or partial orphaned code blocks below this point)
 
-  // AI improvement handler for summary field
-  const improveWithAI = async () => {
+
+
+  // AI feedback for summary
+  const { aiLoading: summaryAiLoading, aiFeedback: summaryAiFeedback, improveFieldWithAI: improveSummaryWithAI, setAiFeedback: setSummaryAiFeedback } = useAIFieldImprover();
+
+  const handleSummaryAI = async () => {
     if (!data.summary.trim()) {
       window.alert("Please enter a professional summary before improving with AI.");
       return;
     }
-    setAiLoading(true);
-    try {
-      const res = await fetch("/api/ai-correct", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: data.summary, field: "summary" })
-      });
-      const result = await res.json();
-      if (res.ok && result.text) {
-        onChange({ ...data, summary: result.text });
-        window.alert("Summary improved with AI!");
-      } else {
-        window.alert(result.error || "AI improvement failed.");
-      }
-    } catch (e: unknown) {
-      if (typeof e === "object" && e !== null && "message" in e && typeof (e as { message?: string }).message === "string") {
-        window.alert("AI improvement failed: " + (e as { message: string }).message);
-      } else {
-        window.alert("AI improvement failed: " + String(e));
-      }
-    } finally {
-      setAiLoading(false);
+    const improved = await improveSummaryWithAI(data.summary, "summary");
+    if (improved) {
+      onChange({ ...data, summary: improved });
+      window.alert("Summary improved with AI!");
+    }
+  };
+
+  const handleSummaryFixIt = () => {
+    if (summaryAiFeedback?.suggested) {
+      onChange({ ...data, summary: summaryAiFeedback.suggested });
+      setSummaryAiFeedback(null);
     }
   };
 
@@ -155,6 +168,7 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
       endDate: "",
       gpa: "",
       location: "",
+      description: <></>,
     }
     onChange({ ...data, education: [...data.education, newEdu] })
   }
@@ -336,8 +350,8 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl font-semibold">Professional Summary</CardTitle>
-          <Button onClick={improveWithAI} disabled={aiLoading} variant="outline" size="sm">
-            {aiLoading ? "Improving..." : "Improve with AI"}
+          <Button onClick={handleSummaryAI} disabled={summaryAiLoading} variant="outline" size="sm">
+            {summaryAiLoading ? "Improving..." : "Improve with AI"}
           </Button>
         </CardHeader>
         <CardContent>
@@ -351,6 +365,32 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
                 rows={4}
               />
             </div>
+            {/* AI Feedback UI for Summary */}
+            {summaryAiFeedback && (
+              <div className="mt-2 space-y-1 bg-slate-50 rounded p-2 border border-slate-200">
+                <div>
+                  <span className="font-bold text-red-600">❌ What's missing</span>
+                  <ul className="list-disc list-inside">
+                    {summaryAiFeedback.missing.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+                <div>
+                  <span className="font-bold text-green-700">📈 How to improve</span>
+                  <ul className="list-disc list-inside">
+                    {summaryAiFeedback.improve.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+                {summaryAiFeedback.suggested && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleSummaryFixIt}
+                  >
+                    Fix it
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -365,7 +405,7 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.experience.map((exp, index) => (
+          {data.experience.map((exp: typeof data.experience[number], index: number) => (
             <div key={exp.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Experience {index + 1}</h4>
@@ -466,6 +506,36 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
                       {experienceAiLoading[exp.id]?.description ? "Improving..." : "Improve with AI"}
                     </Button>
                   </div>
+                  {/* AI Feedback UI for Experience */}
+                  {experienceAiFeedback[exp.id] && (
+                    <div className="mt-2 space-y-1 bg-slate-50 rounded p-2 border border-slate-200">
+                      <div>
+                        <span className="font-bold text-red-600">❌ What's missing</span>
+                        <ul className="list-disc list-inside">
+                          {experienceAiFeedback[exp.id].missing.map((item, i) => <li key={i}>{item}</li>)}
+                        </ul>
+                      </div>
+                      <div>
+                        <span className="font-bold text-green-700">📈 How to improve</span>
+                        <ul className="list-disc list-inside">
+                          {experienceAiFeedback[exp.id].improve.map((item, i) => <li key={i}>{item}</li>)}
+                        </ul>
+                      </div>
+                      {experienceAiFeedback[exp.id].suggested && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => {
+                            const updated = data.experience.map((e) => e.id === exp.id ? { ...e, description: experienceAiFeedback[exp.id].suggested! } : e);
+                            onChange({ ...data, experience: updated });
+                          }}
+                        >
+                          Fix it
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
                 </div>
               </div>
             </div>
@@ -483,7 +553,7 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.education.map((edu, index) => (
+          {data.education.map((edu: typeof data.education[number], index: number) => (
             <div key={edu.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Education {index + 1}</h4>
@@ -591,7 +661,7 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.projects.map((project, index) => (
+          {data.projects.map((project: typeof data.projects[number], index: number) => (
             <div key={project.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Project {index + 1}</h4>
@@ -674,7 +744,7 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.skills.map((skill, index) => (
+          {data.skills.map((skill: typeof data.skills[number], index: number) => (
             <div key={skill.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Skill Category {index + 1}</h4>
@@ -720,7 +790,7 @@ export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProp
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.certifications.map((cert, index) => (
+          {data.certifications.map((cert: typeof data.certifications[number], index: number) => (
             <div key={cert.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Certification {index + 1}</h4>
