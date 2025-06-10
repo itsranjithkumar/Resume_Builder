@@ -369,7 +369,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
             {summaryAiFeedback && (
               <div className="mt-2 space-y-1 bg-slate-50 rounded p-2 border border-slate-200">
                 <div>
-                  <span className="font-bold text-red-600">❌ What's missing</span>
+                  <span className="font-bold text-red-600">❌ What&apos;s missing</span>
                   <ul className="list-disc list-inside">
                     {summaryAiFeedback.missing.map((item, i) => <li key={i}>{item}</li>)}
                   </ul>
@@ -510,7 +510,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                   {experienceAiFeedback[exp.id] && (
                     <div className="mt-2 space-y-1 bg-slate-50 rounded p-2 border border-slate-200">
                       <div>
-                        <span className="font-bold text-red-600">❌ What's missing</span>
+                        <span className="font-bold text-red-600">❌ What&apos;s missing</span>
                         <ul className="list-disc list-inside">
                           {experienceAiFeedback[exp.id].missing.map((item, i) => <li key={i}>{item}</li>)}
                         </ul>

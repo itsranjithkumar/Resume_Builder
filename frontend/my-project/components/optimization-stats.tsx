@@ -4,8 +4,21 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { TrendingUp, Target, AlertTriangle, CheckCircle } from "lucide-react"
 
+interface KeywordDensityData {
+  resume: number;
+  jd: number;
+  status: string;
+}
+
+interface AnalysisResults {
+  matchScore: number;
+  missingSkills: string[];
+  suggestedImprovements: unknown[];
+  keywordDensity: Record<string, KeywordDensityData>;
+}
+
 interface OptimizationStatsProps {
-  results: any
+  results: AnalysisResults;
 }
 
 export function OptimizationStats({ results }: OptimizationStatsProps) {
@@ -67,7 +80,7 @@ export function OptimizationStats({ results }: OptimizationStatsProps) {
             <CheckCircle className="w-5 h-5 text-green-600" />
           </div>
           <div className="text-2xl font-bold text-green-600">
-            {Object.values(results.keywordDensity).filter((k: any) => k.status === "good").length}
+            {Object.values(results.keywordDensity).filter((k: KeywordDensityData) => k.status === "good").length}
           </div>
           <p className="text-xs text-muted-foreground">Well matched</p>
         </CardContent>

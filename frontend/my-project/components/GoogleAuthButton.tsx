@@ -1,7 +1,7 @@
 import { GoogleLogin } from '@react-oauth/google';
 import React, { useState } from 'react';
 
-const GOOGLE_CLIENT_ID = '853434167999-0aj5opdatd6i58n6uifanipcchfkunqd.apps.googleusercontent.com';
+
 const USER_API_BASE_URL = process.env.NEXT_PUBLIC_USER_API_BASE_URL || 'http://localhost:8000/api/users';
 
 const GoogleAuthButton: React.FC = () => {
@@ -26,7 +26,8 @@ const GoogleAuthButton: React.FC = () => {
         fullName: data.full_name || data.name || ''
       }));
       window.location.href = '/';
-    } catch (err: any) {
+    } catch {
+
       setError('Google sign-in failed. Please try again.');
     } finally {
       setLoading(false);

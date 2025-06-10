@@ -12,49 +12,163 @@ import { ResumeEditor } from "@/components/resume-editor"
 import { OptimizationStats } from "@/components/optimization-stats"
 
 // DUMMY AI FUNCTIONS - Replace these with real AI integration
-const analyzeResumeAndJD = async (resume: string, jobDescription: string) => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 2000))
+// --- Rule-based JD/Resume Matcher (no AI) ---
+const STOPWORDS = [
+  'the', 'and', 'with', 'for', 'from', 'that', 'this', 'will', 'are', 'but', 'can', 'you', 'your', 'our', 'has', 'have', 'all', 'any', 'not', 'may', 'etc', 'their', 'they', 'who', 'what', 'when', 'where', 'which', 'how', 'why', 'was', 'were', 'been', 'being', 'more', 'than', 'such', 'other', 'also', 'use', 'used', 'using', 'on', 'in', 'to', 'of', 'as', 'by', 'is', 'it', 'an', 'or', 'a'
+];
 
-  return {
-    matchScore: 72,
-    missingSkills: ["React.js", "TypeScript", "AWS", "Docker", "Kubernetes", "GraphQL"],
-    suggestedImprovements: [
-      {
-        section: "Skills",
-        current: "JavaScript, HTML, CSS",
-        suggested: "JavaScript, TypeScript, React.js, HTML5, CSS3, GraphQL",
-        reason: "Add TypeScript and React.js as they are mentioned 8 times in the job description",
-      },
-      {
-        section: "Experience",
-        current: "Developed web applications",
-        suggested: "Developed scalable web applications using React.js and TypeScript, deployed on AWS infrastructure",
-        reason: "Include specific technologies and cloud platform mentioned in JD",
-      },
-      {
-        section: "Projects",
-        current: "Built e-commerce website",
-        suggested:
-          "Built responsive e-commerce platform with React.js frontend and Node.js backend, containerized with Docker",
-        reason: "Highlight containerization and specific tech stack",
-      },
-    ],
-    keywordDensity: {
-      React: { resume: 0, jd: 8, status: "missing" },
-      TypeScript: { resume: 0, jd: 5, status: "missing" },
-      JavaScript: { resume: 3, jd: 4, status: "good" },
-      AWS: { resume: 0, jd: 6, status: "missing" },
-      Docker: { resume: 0, jd: 3, status: "missing" },
-    },
+// List of main technical skills/concepts to match (can be expanded)
+const SKILLS_DICTIONARY = [
+  'react', 'react.js', 'typescript', 'javascript', 'html5', 'css3', 'redux', 'state management',
+  'rest', 'rest apis', 'api', 'jest', 'testing', 'git', 'ci/cd', 'pipelines', 'frontend',
+  'css', 'html', 'node.js', 'version control', 'react testing library', 'third-party', 'integration'
+];
+
+function extractKeywords(text: string): string[] {
+  // Extract words/phrases from text, filter by SKILLS_DICTIONARY
+  const words = Array.from(
+    new Set(
+      text
+        .toLowerCase()
+        .replace(/[.,;:()\-\[\]{}!"'`~@#$%^&*_+=<>?/\\|]/g, ' ')
+        .split(/\s+/)
+        .filter(word => word.length > 2 && !STOPWORDS.includes(word))
+    )
+  );
+  // Also match multi-word skills/phrases
+  const textLower = text.toLowerCase();
+  const foundSkills = new Set<string>();
+  // Check for phrase matches first
+  SKILLS_DICTIONARY.forEach(skill => {
+    if (skill.includes(' ')) {
+      if (textLower.includes(skill)) foundSkills.add(skill);
+    }
+  });
+  // Check for single-word matches
+  words.forEach(word => {
+    if (SKILLS_DICTIONARY.includes(word)) foundSkills.add(word);
+  });
+  return Array.from(foundSkills);
+}
+
+
+function findMissingKeywords(jd: string, resume: string): string[] {
+  const jdKeywords = extractKeywords(jd);
+  const resumeText = resume.toLowerCase();
+  return jdKeywords.filter(keyword => !resumeText.includes(keyword));
+}
+
+function computeKeywordDensity(jd: string, resume: string): Record<string, { resume: number; jd: number; status: string }> {
+  const jdKeywords = extractKeywords(jd);
+  const resumeWords = resume.toLowerCase().split(/\s+/);
+  const jdWords = jd.toLowerCase().split(/\s+/);
+  const density: Record<string, { resume: number; jd: number; status: string }> = {};
+  jdKeywords.forEach(keyword => {
+    const resumeCount = resumeWords.filter(w => w === keyword).length;
+    const jdCount = jdWords.filter(w => w === keyword).length;
+    density[keyword] = {
+      resume: resumeCount,
+      jd: jdCount,
+      status: resumeCount > 0 ? 'good' : 'missing',
+    };
+  });
+  return density;
+}
+
+function computeMatchScore(jd: string, resume: string): number {
+  const jdKeywords = extractKeywords(jd);
+  if (jdKeywords.length === 0) return 0;
+  const found = jdKeywords.filter(k => resume.toLowerCase().includes(k)).length;
+  return Math.round((found / jdKeywords.length) * 100);
+}
+
+function extractExperiencePhrases(text: string): string[] {
+  // Extract common experience/responsibility phrases (simple heuristic)
+  const EXPERIENCE_PHRASES = [
+    'responsive web applications',
+    'collaborate with designers',
+    'collaborate with developers',
+    'optimize applications',
+    'write clean code',
+    'maintainable code',
+    'well-documented code',
+    'work with rest apis',
+    'integrate third-party services',
+    'testing frameworks',
+    'ci/cd pipelines',
+    'version control',
+    'state management',
+    'api integration',
+    'code reviews',
+    'scalability',
+    'performance',
+    'collaborate',
+    'documentation'
+  ];
+  const textLower = text.toLowerCase();
+  return EXPERIENCE_PHRASES.filter(phrase => textLower.includes(phrase));
+}
+
+function findMissingExperience(jd: string, resume: string): string[] {
+  const jdExp = extractExperiencePhrases(jd);
+  const resumeLower = resume.toLowerCase();
+  return jdExp.filter(phrase => !resumeLower.includes(phrase));
+}
+
+interface Suggestion {
+  section: 'Skills' | 'Experience';
+  current: string;
+  suggested: string;
+  reason: string;
+}
+
+function suggestImprovements(jd: string, resume: string): Suggestion[] {
+  const missingSkills = findMissingKeywords(jd, resume);
+  const missingExperience = findMissingExperience(jd, resume);
+  const suggestions: Suggestion[] = [];
+  if (missingSkills.length) {
+    suggestions.push({
+      section: 'Skills',
+      current: '-',
+      suggested: missingSkills.join(', '),
+      reason: 'Add these skills/technologies to better match the job description.'
+    });
   }
+  if (missingExperience.length) {
+    suggestions.push({
+      section: 'Experience',
+      current: '-',
+      suggested: missingExperience.join('; '),
+      reason: 'Consider adding experience or achievements related to these responsibilities or content areas.'
+    });
+  }
+  return suggestions;
+}
+
+
+interface AnalysisResults {
+  matchScore: number;
+  missingSkills: string[];
+  suggestedImprovements: Suggestion[];
+  keywordDensity: Record<string, { resume: number; jd: number; status: string }>;
+}
+
+const analyzeResumeAndJD = async (resume: string, jobDescription: string): Promise<AnalysisResults> => {
+  // No delay, instant rule-based scan
+  const missingSkills = findMissingKeywords(jobDescription, resume);
+  return {
+    matchScore: computeMatchScore(jobDescription, resume),
+    missingSkills,
+    suggestedImprovements: suggestImprovements(jobDescription, resume),
+    keywordDensity: computeKeywordDensity(jobDescription, resume),
+  };
 }
 
 export default function JDOptimizerPage() {
   const [step, setStep] = useState<"input" | "analyzing" | "results">("input")
   const [resume, setResume] = useState("")
   const [jobDescription, setJobDescription] = useState("")
-  const [analysisResults, setAnalysisResults] = useState<any>(null)
+  const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null)
   const [optimizedResume, setOptimizedResume] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
 
@@ -77,10 +191,35 @@ export default function JDOptimizerPage() {
     }
   }
 
-  const handleApplySuggestion = (suggestion: any) => {
-    // DUMMY AI FUNCTION - Replace with real implementation
-    const updatedResume = optimizedResume.replace(suggestion.current, suggestion.suggested)
-    setOptimizedResume(updatedResume)
+  const handleApplySuggestion = (suggestion: Suggestion) => {
+    let updatedResume = optimizedResume;
+    if (suggestion.section === 'Skills') {
+      // Try to find a Skills section and append, else add a new section
+      const skillsHeader = /skills[:\n]/i;
+      if (skillsHeader.test(updatedResume)) {
+        updatedResume = updatedResume.replace(skillsHeader, match => match + ' ' + suggestion.suggested + ', ');
+      } else {
+        updatedResume += `\n\nSkills: ${suggestion.suggested}`;
+      }
+    } else if (suggestion.section === 'Experience') {
+      // Try to find an Experience or Achievements section and append as bullet(s)
+      const expHeader = /experience[:\n]/i;
+      const achievementsHeader = /achievements[:\n]/i;
+      const bullet = suggestion.suggested
+  .split(';')
+  .map((s: string) => s.trim())
+  .filter(Boolean)
+  .map((s: string) => `- ${s}`)
+  .join('\n');
+      if (expHeader.test(updatedResume)) {
+        updatedResume = updatedResume.replace(expHeader, match => match + '\n' + bullet + '\n');
+      } else if (achievementsHeader.test(updatedResume)) {
+        updatedResume = updatedResume.replace(achievementsHeader, match => match + '\n' + bullet + '\n');
+      } else {
+        updatedResume += `\n\nExperience:\n${bullet}`;
+      }
+    }
+    setOptimizedResume(updatedResume);
   }
 
   const handleDownload = () => {
@@ -149,12 +288,15 @@ export default function JDOptimizerPage() {
             </div>
           </div>
 
-          <OptimizationStats results={analysisResults} />
-
-          <div className="grid lg:grid-cols-2 gap-6 mt-6">
-            <AnalysisResults results={analysisResults} onApplySuggestion={handleApplySuggestion} />
-            <ResumeEditor resume={optimizedResume} onChange={setOptimizedResume} />
-          </div>
+          {analysisResults && (
+            <>
+              <OptimizationStats results={analysisResults} />
+              <div className="grid lg:grid-cols-2 gap-6 mt-6">
+                <AnalysisResults results={analysisResults} onApplySuggestion={handleApplySuggestion} />
+                <ResumeEditor resume={optimizedResume} onChange={setOptimizedResume} />
+              </div>
+            </>
+          )}
         </div>
       </div>
     )

@@ -9,8 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import GoogleAuthButton from "@/components/GoogleAuthButton";
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { useRouter } from "next/navigation";
-import { setAuthToken } from "../utils/api";
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -18,7 +17,7 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const router = useRouter();
+
 
   const USER_API_BASE_URL = process.env.NEXT_PUBLIC_USER_API_BASE_URL || "http://localhost:8000/api/users";
 

@@ -149,12 +149,12 @@ export default function ResumePreview({ data }: ResumePreviewProps) {
                 <p>• Volunteered in a 3-month data science Project, run by ACB Corporation Inc.</p>
                 <p>• ABC Certification (2022)</p>
                 <p>• Completed 10+ competitions on Kaggle in 2021.</p>
-                <p>• Awards: Resume Worded Teaching Fellow (only 5 awarded to class), Dean's List 2012 (Top 10%)</p>
+                <p>• Awards: Resume Worded Teaching Fellow (only 5 awarded to class), Dean&apos;s List 2012 (Top 10%)</p>
                 <div className="mt-4 pt-4 border-t border-gray-300">
                   <p className="text-xs">
-                    • Don't forget to use <span className="text-blue-600 underline">Resume Worded</span> to scan your
-                    resume before you send it off (it's free and proven to get you more jobs). It's helped 900k people
-                    in 2021 speed up their job search by over 3x, so please I'd encourage you to try the free version at
+                    • Don&apos;t forget to use <span className="text-blue-600 underline">Resume Worded</span> to scan your
+                    resume before you send it off (it&apos;s free and proven to get you more jobs). It&apos;s helped 900k people
+                    in 2021 speed up their job search by over 3x, so please I&apos;d encourage you to try the free version at
                     least to get parts of your resume fixed.
                   </p>
                 </div>

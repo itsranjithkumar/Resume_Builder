@@ -6,9 +6,29 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CheckCircle, AlertCircle, TrendingUp, Plus } from "lucide-react"
 
+interface Suggestion {
+  section: 'Skills' | 'Experience';
+  current: string;
+  suggested: string;
+  reason: string;
+}
+
+interface KeywordDensityData {
+  resume: number;
+  jd: number;
+  status: string;
+}
+
+interface AnalysisResults {
+  matchScore: number;
+  missingSkills: string[];
+  suggestedImprovements: Suggestion[];
+  keywordDensity: Record<string, KeywordDensityData>;
+}
+
 interface AnalysisResultsProps {
-  results: any
-  onApplySuggestion: (suggestion: any) => void
+  results: AnalysisResults;
+  onApplySuggestion: (suggestion: Suggestion) => void;
 }
 
 export function AnalysisResults({ results, onApplySuggestion }: AnalysisResultsProps) {
@@ -51,7 +71,7 @@ export function AnalysisResults({ results, onApplySuggestion }: AnalysisResultsP
           </TabsContent>
 
           <TabsContent value="suggestions" className="space-y-4">
-            {results.suggestedImprovements.map((suggestion: any, index: number) => (
+            {results.suggestedImprovements.map((suggestion: Suggestion, index: number) => (
               <div key={index} className="border rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <Badge variant="outline">{suggestion.section}</Badge>
@@ -89,7 +109,7 @@ export function AnalysisResults({ results, onApplySuggestion }: AnalysisResultsP
 
           <TabsContent value="keywords" className="space-y-4">
             <div className="space-y-3">
-              {Object.entries(results.keywordDensity).map(([keyword, data]: [string, any]) => (
+              {Object.entries(results.keywordDensity).map(([keyword, data]: [string, KeywordDensityData]) => (
                 <div key={keyword} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <span className="font-medium">{keyword}</span>
