@@ -171,6 +171,13 @@ export default function JDOptimizerPage() {
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null)
   const [optimizedResume, setOptimizedResume] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [showJson, setShowJson] = useState(false);
+  // Structured resume object for JSON output (if available)
+  const [resumeData, setResumeData] = useState<any | null>(null); // Replace 'any' with ResumeData if type is available
+
+  // Example: If you have a ResumeUpload or ResumeForm component that can provide structured data, set it here
+  // e.g. <ResumeForm data={resumeData} onChange={setResumeData} />
+
 
   const handleAnalyze = async () => {
     if (!resume || !jobDescription) return
@@ -284,18 +291,29 @@ export default function JDOptimizerPage() {
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
+                <Button onClick={() => setShowJson((v) => !v)} variant="outline" size="sm">
+                  {showJson ? "Show UI" : "Show JSON"}
+                </Button>
               </div>
             </div>
           </div>
 
           {analysisResults && (
-            <>
-              <OptimizationStats results={analysisResults} />
-              <div className="grid lg:grid-cols-2 gap-6 mt-6">
-                <AnalysisResults results={analysisResults} onApplySuggestion={handleApplySuggestion} />
-                <ResumeEditor resume={optimizedResume} onChange={setOptimizedResume} />
-              </div>
-            </>
+            showJson ? (
+              <pre className="p-4 bg-gray-100 rounded text-xs overflow-auto max-h-[600px] border">
+                {resumeData
+                  ? JSON.stringify(resumeData, null, 2)
+                  : 'Structured JSON is not available for plain text resumes.'}
+              </pre>
+            ) : (
+              <>
+                <OptimizationStats results={analysisResults} />
+                <div className="grid lg:grid-cols-2 gap-6 mt-6">
+                  <AnalysisResults results={analysisResults} onApplySuggestion={handleApplySuggestion} />
+                  <ResumeEditor resume={optimizedResume} onChange={setOptimizedResume} />
+                </div>
+              </>
+            )
           )}
         </div>
       </div>
