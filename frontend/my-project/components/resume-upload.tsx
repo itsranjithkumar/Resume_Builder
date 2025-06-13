@@ -21,25 +21,6 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
 
   // Simple parser for demo: extracts name, email, phone, links, summary, skills, experience
   function parseResumeToJson(text: string) {
-    // Helper to standardize date (tries to get YYYY-MM or YYYY)
-    function normalizeDate(dateStr: string) {
-      if (!dateStr) return '';
-      const ymd = dateStr.match(/\d{4}[-/]\d{2}/);
-      if (ymd) return ymd[0];
-      const year = dateStr.match(/\d{4}/);
-      return year ? year[0] : dateStr;
-    }
-    // Helper to extract role(s) from summary or first lines
-    function extractRoles(summary: string, lines: string[]) {
-      // Try to find roles in summary or first 2 lines
-      const roleRegex = /(developer|engineer|manager|designer|analyst|consultant|lead|architect|intern)/i;
-      let found: string[] = [];
-      if (roleRegex.test(summary)) found.push(summary.match(roleRegex)?.[0] || '');
-      for (let i = 0; i < Math.min(2, lines.length); i++) {
-        if (roleRegex.test(lines[i])) found.push(lines[i].match(roleRegex)?.[0] || '');
-      }
-      return Array.from(new Set(found.filter(Boolean)));
-    }
     const lines = text.split(/\r?\n/).map(line => line.trim());
     let section = 'header';
     let summaryLines: string[] = [];
@@ -56,47 +37,32 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
     let github = '';
     let foundName = false;
 
-    // Support emoji and text-based section headers
     const sectionHeaders = [
-      { key: 'summary', regex: /^(summary|👨‍💼|professional summary)/i },
-      { key: 'work', regex: /^(professional |work )?experience|💼/i },
-      { key: 'education', regex: /^education|🎓/i },
-      { key: 'skills', regex: /^skills|🧠|technical skills/i },
-      { key: 'certifications', regex: /^certifications|📜/i },
+      { key: 'summary', regex: /^summary$/i },
+      { key: 'work', regex: /^(professional |work )?experience$/i },
+      { key: 'education', regex: /^education$/i },
+      { key: 'skills', regex: /^skills$/i },
+      { key: 'certifications', regex: /^certifications$/i },
     ];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      // Extract name (first non-empty line, not an icon header)
-      if (!foundName && line && !/^([\u{1F300}-\u{1FAFF}]|[\u2600-\u26FF]|[\u2700-\u27BF]|[\uFE0F]|[\u200D]|[\u25A0-\u25FF])/u.test(line)) {
+      if (!foundName && line && !line.match(/^[📞✉️🔗💻]/)) {
         fullName = line;
         foundName = true;
         continue;
       }
-      // Extract email
       const emailMatch = line.match(/[\w.-]+@[\w.-]+/);
       if (emailMatch) email = emailMatch[0];
-      // Extract phone (look for numbers that are not years)
       const phoneMatch = line.match(/\+?\d[\d\s-]{7,}/);
-      if (phoneMatch && !/\d{4}\s*-\s*\d{4}/.test(phoneMatch[0])) phone = phoneMatch[0];
-      // Extract LinkedIn
-      if (/linkedin/i.test(line)) {
-        const match = line.match(/(linkedin\.com\/[^\s|]+)/i);
-        linkedin = match ? (match[0].startsWith('http') ? match[0] : 'https://' + match[0]) : linkedin;
+      if (phoneMatch) phone = phoneMatch[0];
+      if (/linkedin/i.test(line) && line.includes('linkedin.com')) {
+        const match = line.match(/https?:\/\/\S+/);
+        linkedin = match ? match[0] : '';
       }
-      // Extract GitHub
-      if (/github/i.test(line)) {
-        const match = line.match(/(github\.com\/[^\s|]+)/i);
-        github = match ? (match[0].startsWith('http') ? match[0] : 'https://' + match[0]) : github;
-      }
-      // Extract website
-      if (/www\.[^\s|]+/i.test(line)) {
-        // Not LinkedIn or GitHub
-        if (!/linkedin|github/i.test(line)) {
-          const match = line.match(/www\.[^\s|]+/i);
-          // Add https prefix
-          safePersonalInfo.website = match ? 'https://' + match[0] : safePersonalInfo.website;
-        }
+      if (/github/i.test(line) && line.includes('github.com')) {
+        const match = line.match(/https?:\/\/\S+/);
+        github = match ? match[0] : '';
       }
       // Section switching
       let matchedSection = sectionHeaders.find(h => h.regex.test(line));
@@ -127,45 +93,18 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
     }
     if (currentWork.length) workBlocks.push(currentWork);
     if (currentEducation.length) educationBlocks.push(currentEducation);
-    // Group skills by category if possible
-    let skillGroups: { category: string, items: string[] }[] = [];
-    // Also support bullet-style skills (lines starting with '-')
+    // Flatten skills
+    let skills: string[] = [];
     skillLines.forEach(l => {
+      // Handle lines like 'Languages: JavaScript, TypeScript, HTML5, CSS3'
       if (l.includes(':')) {
-        const [cat, items] = l.split(':');
-        skillGroups.push({
-          category: cat.trim(),
-          items: items.split(',').map(s => s.trim()).filter(Boolean)
-        });
-      } else if (/^-/.test(l)) {
-        // Bullet line, try to extract category and items
-        const bullet = l.replace(/^-\s*/, '');
-        // e.g. 'Languages: JavaScript, TypeScript'
-        if (bullet.includes(':')) {
-          const [cat, items] = bullet.split(':');
-          skillGroups.push({
-            category: cat.trim(),
-            items: items.split(',').map(s => s.trim()).filter(Boolean)
-          });
-        } else {
-          skillGroups.push({
-            category: 'General',
-            items: bullet.split(',').map(s => s.trim()).filter(Boolean)
-          });
-        }
+        skills = skills.concat(l.split(':')[1].split(',').map(s => s.trim()));
       } else {
-        // No category, treat as generic
-        skillGroups.push({
-          category: 'General',
-          items: l.split(',').map(s => s.trim()).filter(Boolean)
-        });
+        skills = skills.concat(l.split(',').map(s => s.trim()));
       }
     });
-    // Flatten all skills for summary array
-    let skills: string[] = skillGroups.flatMap(g => g.items).filter(Boolean);
-    // Remove duplicates
-    skills = Array.from(new Set(skills));
-    // Parse work blocks into experience objects with highlights and standardized dates
+    skills = skills.filter(Boolean);
+    // Parse work blocks into experience objects
     const experience = workBlocks.map((block, idx) => {
       let position = '';
       let company = '';
@@ -174,32 +113,20 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
       let endDate = '';
       let current = false;
       let description = '';
-      let highlights: string[] = [];
-      // Try to detect position and company from first two lines
       if (block.length > 0) position = block[0];
-      // Second line: "ABC Technologies, Bangalore — Jan 2022 - Present"
       if (block.length > 1) {
-        // Try to match: Company, Location — Dates
-        const line = block[1];
-        // Try split on em dash, en dash, or hyphen
-        const dashSplit = line.split(/[—–-]/);
-        let compLoc = '', dur = '';
-        if (dashSplit.length >= 2) {
-          compLoc = dashSplit[0].trim();
-          dur = dashSplit.slice(1).join('-').trim();
-        } else {
-          compLoc = line;
+        // e.g. 'ABC Technologies, Bangalore | Jan 2022 – Present'
+        const [compLoc, dur] = block[1].split('|');
+        if (compLoc) {
+          const compLocSplit = compLoc.split(',');
+          company = compLocSplit[0]?.trim() || '';
+          location = compLocSplit.slice(1).join(',').trim();
         }
-        // Company, Location
-        const compLocSplit = compLoc.split(',');
-        company = compLocSplit[0]?.trim() || '';
-        location = compLocSplit.slice(1).join(',').trim();
-        // Dates
         if (dur) {
           // Try to parse start/end
-          const dateParts = dur.split(/to|–|-/i).map(s => s.trim());
-          startDate = normalizeDate(dateParts[0] || '');
-          endDate = normalizeDate(dateParts[1] || '');
+          const dateParts = dur.split('–').map(s => s.trim());
+          startDate = dateParts[0] || '';
+          endDate = dateParts[1] || '';
           if (/present/i.test(endDate)) {
             current = true;
             endDate = '';
@@ -207,10 +134,7 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
         }
       }
       if (block.length > 2) {
-        // Split description into highlights if lines start with - or •
-        const descLines = block.slice(2);
-        highlights = descLines.filter(l => /^[-•]/.test(l)).map(l => l.replace(/^[-•]\s*/, ''));
-        description = descLines.filter(l => !/^[-•]/.test(l)).join(' ');
+        description = block.slice(2).join('\n');
       }
       // Always provide a unique, non-empty id
       let id = (position + company + startDate).replace(/\s+/g, '');
@@ -224,11 +148,10 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
         endDate,
         current,
         description,
-        highlights
       };
     }).filter(e => e.position);
 
-    // Parse education blocks into objects with standardized dates
+    // Parse education blocks into objects
     const education = educationBlocks.map((block, idx) => {
       let degree = '';
       let institution = '';
@@ -244,25 +167,17 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
         if (fieldMatch) field = fieldMatch[1];
       }
       if (block.length > 1) {
-        // Try to parse: 'ABC University, Chennai — 2017 - 2021'
-        const line = block[1];
-        const dashSplit = line.split(/[—–-]/);
-        let instLoc = '', dur = '';
-        if (dashSplit.length >= 2) {
-          instLoc = dashSplit[0].trim();
-          dur = dashSplit.slice(1).join('-').trim();
-        } else {
-          instLoc = line;
+        // e.g. 'ABC University, Chennai | 2017 – 2021'
+        const [instLoc, dur] = block[1].split('|');
+        if (instLoc) {
+          const instLocSplit = instLoc.split(',');
+          institution = instLocSplit[0]?.trim() || '';
+          location = instLocSplit.slice(1).join(',').trim();
         }
-        // Institution, Location
-        const instLocSplit = instLoc.split(',');
-        institution = instLocSplit[0]?.trim() || '';
-        location = instLocSplit.slice(1).join(',').trim();
-        // Dates
         if (dur) {
-          const dateParts = dur.split(/to|–|-/i).map(s => s.trim());
-          startDate = normalizeDate(dateParts[0] || '');
-          endDate = normalizeDate(dateParts[1] || '');
+          const dateParts = dur.split('–').map(s => s.trim());
+          startDate = dateParts[0] || '';
+          endDate = dateParts[1] || '';
         }
       }
       // Always provide a unique, non-empty id
@@ -317,7 +232,7 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
       location: edu.location || '',
     }));
 
-    // Parse Projects section if present, extract technologies if possible
+    // Parse Projects section if present
     let projectsSection: string[] = [];
     let inProjects = false;
     lines.forEach((line) => {
@@ -333,94 +248,42 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
         projectsSection.push(line);
       }
     });
-    const projects = projectsSection.map((line, idx) => {
-      // Try to parse: 'Portfolio Website | Next.js, React, TailwindCSS | https://myportfolio.com'
-      const [name, techs, link] = line.split('|').map(s => s.trim());
-      return {
-        id: `${Date.now()}${idx}`,
-        name: name || '',
-        description: '',
-        technologies: techs ? techs.split(',').map(t => t.trim()) : [],
-        link: link || '',
-      };
-    }).filter(p => p.name);
-
-    // Skills section as grouped above
-    const skillsSection = skillGroups.map((group, idx) => ({
+    const projects = projectsSection.map((line, idx) => ({
       id: `${Date.now()}${idx}`,
-      category: group.category,
-      items: group.items
+      name: line.split('|')[0]?.trim() || '',
+      description: '',
+      technologies: '',
+      link: '',
+    })).filter(p => p.name);
+
+    // Parse Skills section if present
+    const skillsSection = skills.map((item, idx) => ({
+      id: `${Date.now()}${idx}`,
+      category: typeof item === 'string' ? item.split(':')[0]?.trim() : '',
+      items: typeof item === 'string' ? item.split(':')[1]?.trim() || item : item,
     }));
 
-    // Parse Certifications section if present, try to extract issuer/date if present
-    const certificationsSection = certificationLines.map((line, idx) => {
-      // Try to parse: 'React Developer Certificate – HackerRank', 'JavaScript Essentials – Coursera'
-      let name = line, issuer = '', date = '', link = '';
-      // Try to split by dash or pipe
-      if (line.includes('–')) {
-        const parts = line.split('–').map(s => s.trim());
-        if (parts.length === 2) {
-          name = parts[0];
-          issuer = parts[1];
-        }
-      } else if (line.includes('|')) {
-        const parts = line.split('|').map(s => s.trim());
-        if (parts.length >= 2) {
-          name = parts[0];
-          issuer = parts[1];
-          if (parts[2]) date = parts[2];
-        }
-      }
-      return {
-        id: `${Date.now()}${idx}`,
-        name,
-        issuer,
-        date,
-        link
-      };
-    });
+    // Parse Certifications section if present
+    const certificationsSection = certificationLines.map((line, idx) => ({
+      id: `${Date.now()}${idx}`,
+      name: line,
+      issuer: '',
+      date: '',
+      link: '',
+    }));
 
     // Compose summary
     const summary = summaryLines.join(' ');
-    // Extract role(s)
-    const roles = extractRoles(summary, lines);
 
-    // Improved JSON structure
     return {
-      basics: {
-        name: safePersonalInfo.fullName,
-        email: safePersonalInfo.email,
-        phone: safePersonalInfo.phone,
-        location: safePersonalInfo.location,
-        summary,
-        role: roles,
-        linkedin: safePersonalInfo.linkedin,
-        github: safePersonalInfo.github
-      },
+      personalInfo: safePersonalInfo,
+      summary,
+      experience: safeExperience,
+      education: safeEducation,
+      projects,
       skills: skillsSection,
-      experience: experience.map(e => ({
-        company: e.company,
-        position: e.position,
-        location: e.location,
-        startDate: e.startDate,
-        endDate: e.endDate,
-        current: e.current,
-        highlights: e.highlights,
-        description: e.description
-      })),
-      education: education.map(e => ({
-        institution: e.institution,
-        degree: e.degree,
-        field: e.field,
-        startDate: e.startDate,
-        endDate: e.endDate,
-        gpa: e.gpa,
-        location: e.location
-      })),
-      projects: projects,
-      certifications: certificationsSection
+      certifications: certificationsSection,
     };
-
   } // Fix missing closing brace
 
   // Update JSON when resume changes
