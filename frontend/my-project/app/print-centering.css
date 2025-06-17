@@ -1,0 +1,15 @@
+@media print {
+  body {
+    background: white !important;
+  }
+  #resume-content {
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-after: avoid;
+  }
+  @page {
+    margin: 0;
+    size: A4 portrait;
+  }
+}

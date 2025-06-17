@@ -1,5 +1,8 @@
 "use client"
 
+import React from "react";
+import "@/app/print-centering.css";
+import ProfileImage from "@/components/profile-image";
 import { Button } from "@/components/ui/button"
 import { Download, ExternalLink, Phone, Mail, MapPin, Globe, Linkedin, Award } from "lucide-react"
 import type { ResumeData } from "@/app/page"
@@ -10,6 +13,8 @@ interface ResumePreviewProps {
 }
 
 export default function ResumePreview({ data, template = "professional" }: ResumePreviewProps) {
+  // Robust image error fallback state for Professional template
+  const [imgError, setImgError] = React.useState(false);
   const formatDate = (dateString: string) => {
     if (!dateString) return ""
     const date = new Date(dateString + "-01")
@@ -106,25 +111,15 @@ export default function ResumePreview({ data, template = "professional" }: Resum
       <div className="w-80 bg-gray-50 p-8 flex flex-col gap-6">
         {/* Profile Section */}
         <div className="text-center">
-          <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-gray-500 overflow-hidden">
-            {data.personalInfo.image ? (
-              <img
-                src={data.personalInfo.image}
-                alt={data.personalInfo.fullName || "Profile"}
-                className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
-              />
-            ) : (
-              data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN"
-            )}
-          </div>
-          <h1 className="text-xl font-bold text-blue-600 mb-1 leading-tight">
-            {data.personalInfo.fullName || "Your Name"}
-          </h1>
-          <p className="text-sm text-gray-600 font-medium">{jobTitle}</p>
-          {data.personalInfo.age && (
-            <p className="text-sm text-gray-500 font-normal mt-1">Age: {data.personalInfo.age}</p>
-          )}
-        </div>
+  <ProfileImage fullName={data.personalInfo.fullName} image={data.personalInfo.image} getInitials={getInitials} />
+  <h1 className="text-xl font-bold text-blue-600 mb-1 leading-tight">
+    {data.personalInfo.fullName || "Your Name"}
+  </h1>
+  <p className="text-sm text-gray-600 font-medium">{jobTitle}</p>
+  {data.personalInfo.age && (
+    <p className="text-sm text-gray-500 font-normal mt-1">Age: {data.personalInfo.age}</p>
+  )}
+</div>
 
         {/* Contact Section */}
         <div>
@@ -367,7 +362,18 @@ export default function ResumePreview({ data, template = "professional" }: Resum
                 className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
               />
             ) : (
-              data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN"
+              <img
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(data.personalInfo.fullName || 'Resume User')}&background=random`}
+                alt="Default Profile"
+                className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
+                onError={(e) => {
+                  // fallback to initials if even the default fails
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent) {
+                    parent.innerHTML = data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN";
+                  }
+                }}
+              />
             )}
           </div>
           <h1 className="text-lg font-bold text-black mb-1 leading-tight truncate">{data.personalInfo.fullName || "Your Name"}</h1>
@@ -598,7 +604,18 @@ export default function ResumePreview({ data, template = "professional" }: Resum
                 className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
               />
             ) : (
-              data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN"
+              <img
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(data.personalInfo.fullName || 'Resume User')}&background=random`}
+                alt="Default Profile"
+                className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
+                onError={(e) => {
+                  // fallback to initials if even the default fails
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent) {
+                    parent.innerHTML = data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN";
+                  }
+                }}
+              />
             )}
           </div>
           <h1 className="text-xl font-light text-gray-800 mb-1 leading-tight">
@@ -805,7 +822,7 @@ export default function ResumePreview({ data, template = "professional" }: Resum
     <div className="max-w-6xl mx-auto">
       {/* Download Button */}
       <div className="flex justify-end mb-6">
-        <Button onClick={handleDownloadPDF} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button onClick={handleDownloadPDF} className="bg-blue-600 hover:bg-blue-700 text-white print:hidden">
           <Download className="h-4 w-4 mr-2" />
           Download PDF
         </Button>

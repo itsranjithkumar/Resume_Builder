@@ -135,11 +135,11 @@ export default function Home() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-6">
-              <Button onClick={handleBackToForm} variant="outline" className="flex items-center gap-2">
+              <Button onClick={handleBackToForm} variant="outline" className="flex items-center gap-2 print:hidden">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Form
               </Button>
-              <h1 className="text-2xl font-bold text-gray-900">Resume Preview</h1>
+              <h1 className="text-2xl font-bold text-gray-900 print:hidden">Resume Preview</h1>
               <div></div>
             </div>
             <ResumePreview data={resumeData} template={selectedTemplate} />
