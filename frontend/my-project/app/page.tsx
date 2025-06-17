@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 
 export interface ResumeData {
+  references: string[]
   personalInfo: {
     fullName: string
+    age?: string
     email: string
     phone: string
     location: string
@@ -78,7 +80,9 @@ export default function Home() {
       }
     }
     return {
+      references: [],
       personalInfo: {
+        age: "",
         fullName: "",
         email: "",
         phone: "",
