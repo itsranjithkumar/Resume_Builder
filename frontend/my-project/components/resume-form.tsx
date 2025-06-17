@@ -16,113 +16,142 @@ interface ResumeFormProps {
   data: ResumeData
   onChange: (data: ResumeData) => void
   onPreview: () => void
+  selectedTemplate: string
+  onTemplateChange: (template: string) => void
 }
 
-import { useEffect } from "react";
-import { useAIFieldImprover } from "@/hooks/use-ai-field-improver";
+import { useEffect } from "react"
+import { useAIFieldImprover } from "@/hooks/use-ai-field-improver"
 
-export default function ResumeForm({ data, onChange, onPreview }: ResumeFormProps) {
+export default function ResumeForm({ data, onChange, onPreview, selectedTemplate, onTemplateChange }: ResumeFormProps) {
   useEffect(() => {
-    console.log("Resume JSON:", JSON.stringify(data, null, 2));
-  }, [data]);
-  const [imagePreview, setImagePreview] = useState<string>("");
+    console.log("Resume JSON:", JSON.stringify(data, null, 2))
+  }, [data])
+  const [imagePreview, setImagePreview] = useState<string>("")
   // Remove old summary AI loading state
   // Per-field loading states
-  const [experienceAiLoading, setExperienceAiLoading] = useState<Record<string, Record<string, boolean>>>({});
-const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, { missing: string[]; improve: string[]; suggested?: string }>>({});
-  const [educationAiLoading, setEducationAiLoading] = useState<Record<string, Record<string, boolean>>>({});
-  const [projectAiLoading, setProjectAiLoading] = useState<Record<string, Record<string, boolean>>>({});
-  const [certificationAiLoading, setCertificationAiLoading] = useState<Record<string, Record<string, boolean>>>({});
+  const [experienceAiLoading, setExperienceAiLoading] = useState<Record<string, Record<string, boolean>>>({})
+  const [experienceAiFeedback, setExperienceAiFeedback] = useState<
+    Record<string, { missing: string[]; improve: string[]; suggested?: string }>
+  >({})
+  const [educationAiLoading, setEducationAiLoading] = useState<Record<string, Record<string, boolean>>>({})
+  const [projectAiLoading, setProjectAiLoading] = useState<Record<string, Record<string, boolean>>>({})
+  const [certificationAiLoading, setCertificationAiLoading] = useState<Record<string, Record<string, boolean>>>({})
 
   // Generic AI improvement handler for any field
   const improveFieldWithAI = async (
-    section: 'experience' | 'education' | 'project' | 'certification',
+    section: "experience" | "education" | "project" | "certification",
     id: string,
     field: string,
-    value: string
+    value: string,
   ) => {
-    let setLoading: React.Dispatch<React.SetStateAction<Record<string, Record<string, boolean>>>>;
+    let setLoading: React.Dispatch<React.SetStateAction<Record<string, Record<string, boolean>>>>
     switch (section) {
-      case 'experience': setLoading = setExperienceAiLoading; break;
-      case 'education': setLoading = setEducationAiLoading; break;
-      case 'project': setLoading = setProjectAiLoading; break;
-      case 'certification': setLoading = setCertificationAiLoading; break;
-      default: return;
+      case "experience":
+        setLoading = setExperienceAiLoading
+        break
+      case "education":
+        setLoading = setEducationAiLoading
+        break
+      case "project":
+        setLoading = setProjectAiLoading
+        break
+      case "certification":
+        setLoading = setCertificationAiLoading
+        break
+      default:
+        return
     }
-    setLoading((prev) => ({ ...prev, [id]: { ...prev[id], [field]: true } }));
+    setLoading((prev) => ({ ...prev, [id]: { ...prev[id], [field]: true } }))
     try {
       const res = await fetch("/api/ai-correct", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: value, field })
-      });
-      const result = await res.json();
+        body: JSON.stringify({ text: value, field }),
+      })
+      const result = await res.json()
       if (res.ok && result.text) {
         // Handle AI feedback for experience section
-        if (section === 'experience' && result.feedback) {
-          setExperienceAiFeedback(prev => ({
+        if (section === "experience" && result.feedback) {
+          setExperienceAiFeedback((prev) => ({
             ...prev,
             [id]: {
               missing: result.feedback.missing || [],
               improve: result.feedback.improve || [],
-              suggested: result.feedback.suggested || undefined
-            }
-          }));
+              suggested: result.feedback.suggested || undefined,
+            },
+          }))
         }
         // Update the correct section/field
-        if (section === 'experience') {
-          const updated = data.experience.map((exp: typeof data.experience[number]) => exp.id === id ? { ...exp, [field]: result.text } : exp);
-          onChange({ ...data, experience: updated });
-        } else if (section === 'education') {
-          const updated = data.education.map((edu: typeof data.education[number]) => edu.id === id ? { ...edu, [field]: result.text } : edu);
-          onChange({ ...data, education: updated });
-        } else if (section === 'project') {
-          const updated = data.projects.map((proj: typeof data.projects[number]) => proj.id === id ? { ...proj, [field]: result.text } : proj);
-          onChange({ ...data, projects: updated });
-        } else if (section === 'certification') {
-          const updated = data.certifications.map((cert: typeof data.certifications[number]) => cert.id === id ? { ...cert, [field]: result.text } : cert);
-          onChange({ ...data, certifications: updated });
+        if (section === "experience") {
+          const updated = data.experience.map((exp: (typeof data.experience)[number]) =>
+            exp.id === id ? { ...exp, [field]: result.text } : exp,
+          )
+          onChange({ ...data, experience: updated })
+        } else if (section === "education") {
+          const updated = data.education.map((edu: (typeof data.education)[number]) =>
+            edu.id === id ? { ...edu, [field]: result.text } : edu,
+          )
+          onChange({ ...data, education: updated })
+        } else if (section === "project") {
+          const updated = data.projects.map((proj: (typeof data.projects)[number]) =>
+            proj.id === id ? { ...proj, [field]: result.text } : proj,
+          )
+          onChange({ ...data, projects: updated })
+        } else if (section === "certification") {
+          const updated = data.certifications.map((cert: (typeof data.certifications)[number]) =>
+            cert.id === id ? { ...cert, [field]: result.text } : cert,
+          )
+          onChange({ ...data, certifications: updated })
         }
-        window.alert("Field improved with AI!");
+        window.alert("Field improved with AI!")
       } else {
-        window.alert(result.error || "AI improvement failed.");
+        window.alert(result.error || "AI improvement failed.")
       }
     } catch (e: unknown) {
-      if (typeof e === "object" && e !== null && "message" in e && typeof (e as { message?: string }).message === "string") {
-        window.alert("AI improvement failed: " + (e as { message: string }).message);
+      if (
+        typeof e === "object" &&
+        e !== null &&
+        "message" in e &&
+        typeof (e as { message?: string }).message === "string"
+      ) {
+        window.alert("AI improvement failed: " + (e as { message: string }).message)
       } else {
-        window.alert("AI improvement failed: " + String(e));
+        window.alert("AI improvement failed: " + String(e))
       }
     } finally {
-      setLoading((prev) => ({ ...prev, [id]: { ...prev[id], [field]: false } }));
+      setLoading((prev) => ({ ...prev, [id]: { ...prev[id], [field]: false } }))
     }
-  };
-// --- END improveFieldWithAI ---
-// (Removed all duplicate or partial orphaned code blocks below this point)
-
-
+  }
+  // --- END improveFieldWithAI ---
+  // (Removed all duplicate or partial orphaned code blocks below this point)
 
   // AI feedback for summary
-  const { aiLoading: summaryAiLoading, aiFeedback: summaryAiFeedback, improveFieldWithAI: improveSummaryWithAI, setAiFeedback: setSummaryAiFeedback } = useAIFieldImprover();
+  const {
+    aiLoading: summaryAiLoading,
+    aiFeedback: summaryAiFeedback,
+    improveFieldWithAI: improveSummaryWithAI,
+    setAiFeedback: setSummaryAiFeedback,
+  } = useAIFieldImprover()
 
   const handleSummaryAI = async () => {
     if (!data.summary.trim()) {
-      window.alert("Please enter a professional summary before improving with AI.");
-      return;
+      window.alert("Please enter a professional summary before improving with AI.")
+      return
     }
-    const improved = await improveSummaryWithAI(data.summary, "summary");
+    const improved = await improveSummaryWithAI(data.summary, "summary")
     if (improved) {
-      onChange({ ...data, summary: improved });
-      window.alert("Summary improved with AI!");
+      onChange({ ...data, summary: improved })
+      window.alert("Summary improved with AI!")
     }
-  };
+  }
 
   const handleSummaryFixIt = () => {
     if (summaryAiFeedback?.suggested) {
-      onChange({ ...data, summary: summaryAiFeedback.suggested });
-      setSummaryAiFeedback(null);
+      onChange({ ...data, summary: summaryAiFeedback.suggested })
+      setSummaryAiFeedback(null)
     }
-  };
+  }
 
   const updatePersonalInfo = (field: string, value: string) => {
     onChange({
@@ -253,8 +282,64 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
     }
   }
 
+  const templates = [
+    {
+      id: "professional",
+      name: "Professional",
+      description: "Clean and modern design with sidebar layout",
+      preview: "/placeholder.svg?height=200&width=150",
+    },
+    {
+      id: "creative",
+      name: "Creative",
+      description: "Bold and colorful design for creative professionals",
+      preview: "/placeholder.svg?height=200&width=150",
+    },
+    {
+      id: "minimal",
+      name: "Minimal",
+      description: "Simple and elegant single-column layout",
+      preview: "/placeholder.svg?height=200&width=150",
+    },
+  ]
+
   return (
     <div className="space-y-8">
+      {/* Template Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold">Choose Template</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {templates.map((template) => (
+              <div
+                key={template.id}
+                className={`border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
+                  selectedTemplate === template.id
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+                onClick={() => onTemplateChange(template.id)}
+              >
+                <div className="aspect-[3/4] bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+                  <img
+                    src={template.preview || "/placeholder.svg"}
+                    alt={`${template.name} template preview`}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                </div>
+                <h3 className="font-semibold text-lg mb-1">{template.name}</h3>
+                <p className="text-sm text-gray-600">{template.description}</p>
+                {selectedTemplate === template.id && (
+                  <div className="mt-2 text-blue-600 text-sm font-medium">✓ Selected</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Personal Information */}
       <Card>
         <CardHeader>
@@ -371,21 +456,21 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                 <div>
                   <span className="font-bold text-red-600">❌ What&apos;s missing</span>
                   <ul className="list-disc list-inside">
-                    {summaryAiFeedback.missing.map((item, i) => <li key={i}>{item}</li>)}
+                    {summaryAiFeedback.missing.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
                   </ul>
                 </div>
                 <div>
                   <span className="font-bold text-green-700">📈 How to improve</span>
                   <ul className="list-disc list-inside">
-                    {summaryAiFeedback.improve.map((item, i) => <li key={i}>{item}</li>)}
+                    {summaryAiFeedback.improve.map((item, i) => (
+                      <li key={i}>{item}</li>
+                    ))}
                   </ul>
                 </div>
                 {summaryAiFeedback.suggested && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleSummaryFixIt}
-                  >
+                  <Button variant="secondary" size="sm" onClick={handleSummaryFixIt}>
                     Fix it
                   </Button>
                 )}
@@ -405,7 +490,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.experience.map((exp: typeof data.experience[number], index: number) => (
+          {data.experience.map((exp: (typeof data.experience)[number], index: number) => (
             <div key={exp.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Experience {index + 1}</h4>
@@ -428,7 +513,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       placeholder="Google"
                     />
                     <Button
-                      onClick={() => improveFieldWithAI('experience', exp.id, 'company', exp.company)}
+                      onClick={() => improveFieldWithAI("experience", exp.id, "company", exp.company)}
                       disabled={!!experienceAiLoading[exp.id]?.company}
                       variant="outline"
                       size="sm"
@@ -498,7 +583,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       rows={4}
                     />
                     <Button
-                      onClick={() => improveFieldWithAI('experience', exp.id, 'description', exp.description)}
+                      onClick={() => improveFieldWithAI("experience", exp.id, "description", exp.description)}
                       disabled={!!experienceAiLoading[exp.id]?.description}
                       variant="outline"
                       size="sm"
@@ -512,13 +597,17 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       <div>
                         <span className="font-bold text-red-600">❌ What&apos;s missing</span>
                         <ul className="list-disc list-inside">
-                          {experienceAiFeedback[exp.id].missing.map((item, i) => <li key={i}>{item}</li>)}
+                          {experienceAiFeedback[exp.id].missing.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
                         </ul>
                       </div>
                       <div>
                         <span className="font-bold text-green-700">📈 How to improve</span>
                         <ul className="list-disc list-inside">
-                          {experienceAiFeedback[exp.id].improve.map((item, i) => <li key={i}>{item}</li>)}
+                          {experienceAiFeedback[exp.id].improve.map((item, i) => (
+                            <li key={i}>{item}</li>
+                          ))}
                         </ul>
                       </div>
                       {experienceAiFeedback[exp.id].suggested && (
@@ -526,8 +615,10 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                           variant="secondary"
                           size="sm"
                           onClick={() => {
-                            const updated = data.experience.map((e) => e.id === exp.id ? { ...e, description: experienceAiFeedback[exp.id].suggested! } : e);
-                            onChange({ ...data, experience: updated });
+                            const updated = data.experience.map((e) =>
+                              e.id === exp.id ? { ...e, description: experienceAiFeedback[exp.id].suggested! } : e,
+                            )
+                            onChange({ ...data, experience: updated })
                           }}
                         >
                           Fix it
@@ -535,7 +626,6 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       )}
                     </div>
                   )}
-
                 </div>
               </div>
             </div>
@@ -553,7 +643,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.education.map((edu: typeof data.education[number], index: number) => (
+          {data.education.map((edu: (typeof data.education)[number], index: number) => (
             <div key={edu.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Education {index + 1}</h4>
@@ -576,7 +666,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       placeholder="Stanford University"
                     />
                     <Button
-                      onClick={() => improveFieldWithAI('education', edu.id, 'institution', edu.institution)}
+                      onClick={() => improveFieldWithAI("education", edu.id, "institution", edu.institution)}
                       disabled={!!educationAiLoading[edu.id]?.institution}
                       variant="outline"
                       size="sm"
@@ -594,7 +684,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       placeholder="Bachelor of Science"
                     />
                     <Button
-                      onClick={() => improveFieldWithAI('education', edu.id, 'degree', edu.degree)}
+                      onClick={() => improveFieldWithAI("education", edu.id, "degree", edu.degree)}
                       disabled={!!educationAiLoading[edu.id]?.degree}
                       variant="outline"
                       size="sm"
@@ -612,7 +702,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       placeholder="Computer Science"
                     />
                     <Button
-                      onClick={() => improveFieldWithAI('education', edu.id, 'field', edu.field)}
+                      onClick={() => improveFieldWithAI("education", edu.id, "field", edu.field)}
                       disabled={!!educationAiLoading[edu.id]?.field}
                       variant="outline"
                       size="sm"
@@ -661,7 +751,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.projects.map((project: typeof data.projects[number], index: number) => (
+          {data.projects.map((project: (typeof data.projects)[number], index: number) => (
             <div key={project.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Project {index + 1}</h4>
@@ -684,7 +774,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       placeholder="E-commerce Platform"
                     />
                     <Button
-                      onClick={() => improveFieldWithAI('project', project.id, 'name', project.name)}
+                      onClick={() => improveFieldWithAI("project", project.id, "name", project.name)}
                       disabled={!!projectAiLoading[project.id]?.name}
                       variant="outline"
                       size="sm"
@@ -720,7 +810,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                     rows={3}
                   />
                   <Button
-                    onClick={() => improveFieldWithAI('project', project.id, 'description', project.description)}
+                    onClick={() => improveFieldWithAI("project", project.id, "description", project.description)}
                     disabled={!!projectAiLoading[project.id]?.description}
                     variant="outline"
                     size="sm"
@@ -744,7 +834,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.skills.map((skill: typeof data.skills[number], index: number) => (
+          {data.skills.map((skill: (typeof data.skills)[number], index: number) => (
             <div key={skill.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Skill Category {index + 1}</h4>
@@ -790,7 +880,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
-          {data.certifications.map((cert: typeof data.certifications[number], index: number) => (
+          {data.certifications.map((cert: (typeof data.certifications)[number], index: number) => (
             <div key={cert.id} className="border rounded-lg p-4 space-y-4">
               <div className="flex justify-between items-start">
                 <h4 className="font-medium">Certification {index + 1}</h4>
@@ -813,7 +903,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       placeholder="AWS Certified Solutions Architect"
                     />
                     <Button
-                      onClick={() => improveFieldWithAI('certification', cert.id, 'name', cert.name)}
+                      onClick={() => improveFieldWithAI("certification", cert.id, "name", cert.name)}
                       disabled={!!certificationAiLoading[cert.id]?.name}
                       variant="outline"
                       size="sm"
@@ -831,7 +921,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
                       placeholder="Amazon Web Services"
                     />
                     <Button
-                      onClick={() => improveFieldWithAI('certification', cert.id, 'issuer', cert.issuer)}
+                      onClick={() => improveFieldWithAI("certification", cert.id, "issuer", cert.issuer)}
                       disabled={!!certificationAiLoading[cert.id]?.issuer}
                       variant="outline"
                       size="sm"
@@ -864,11 +954,7 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
 
       {/* Preview Button */}
       <div className="flex justify-center pt-8">
-        <Button
-          onClick={onPreview}
-          size="lg"
-          className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3"
-        >
+        <Button onClick={onPreview} size="lg" className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3">
           <Eye className="h-5 w-5 mr-2" />
           Preview Resume
         </Button>
@@ -876,4 +962,3 @@ const [experienceAiFeedback, setExperienceAiFeedback] = useState<Record<string, 
     </div>
   )
 }
- 
