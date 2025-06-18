@@ -16,20 +16,21 @@ interface ResumeUploadProps {
 
 export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
   const [dragActive, setDragActive] = useState(false)
-  const [resumeJson, setResumeJson] = useState<any>({})
+  // Use a flexible type for resumeJson
+  const [resumeJson, setResumeJson] = useState<Record<string, unknown>>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Simple parser for demo: extracts name, email, phone, links, summary, skills, experience
   function parseResumeToJson(text: string) {
     const lines = text.split(/\r?\n/).map(line => line.trim());
     let section = 'header';
-    let summaryLines: string[] = [];
-    let workBlocks: string[][] = [];
+    const summaryLines: string[] = [];
+    const workBlocks: string[][] = [];
     let currentWork: string[] = [];
-    let educationBlocks: string[][] = [];
+    const educationBlocks: string[][] = [];
     let currentEducation: string[] = [];
-    let skillLines: string[] = [];
-    let certificationLines: string[] = [];
+    const skillLines: string[] = [];
+    const certificationLines: string[] = [];
     let fullName = '';
     let email = '';
     let phone = '';
@@ -65,7 +66,7 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
         github = match ? match[0] : '';
       }
       // Section switching
-      let matchedSection = sectionHeaders.find(h => h.regex.test(line));
+      const matchedSection = sectionHeaders.find(h => h.regex.test(line));
       if (matchedSection) {
         section = matchedSection.key;
         continue;
@@ -158,7 +159,7 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
       let field = '';
       let startDate = '';
       let endDate = '';
-      let gpa = '';
+      const gpa = '';
       let location = '';
       if (block.length > 0) {
         // e.g. 'Bachelor of Technology in Computer Science'
@@ -195,7 +196,7 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
       };
     }).filter(e => e.degree);
 
-    const certifications = certificationLines.filter(Boolean);
+
     // Defensive: ensure all required fields are present in personalInfo
     const safePersonalInfo = {
       fullName: fullName || '',
@@ -233,7 +234,7 @@ export function ResumeUpload({ resume, onResumeChange }: ResumeUploadProps) {
     }));
 
     // Parse Projects section if present
-    let projectsSection: string[] = [];
+    const projectsSection: string[] = [];
     let inProjects = false;
     lines.forEach((line) => {
       if (/^projects?/i.test(line)) {

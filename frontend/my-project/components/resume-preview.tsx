@@ -2,7 +2,7 @@
 
 import React from "react";
 import "@/app/print-centering.css";
-import ProfileImage from "@/components/profile-image";
+
 import { Button } from "@/components/ui/button"
 import { Download, ExternalLink, Phone, Mail, MapPin, Globe, Linkedin, Award } from "lucide-react"
 import type { ResumeData } from "@/app/page"
@@ -54,7 +54,7 @@ export default function ResumePreview({ data, template = "professional" }: Resum
       })
 
       const pdfWidth = 8.5
-      const pdfHeight = 11
+      // const pdfHeight = 11 (removed unused)
       const imgWidth = canvas.width
       const imgHeight = canvas.height
 
@@ -83,15 +83,6 @@ export default function ResumePreview({ data, template = "professional" }: Resum
   // Extract job title from first experience or use a default
   const jobTitle = data.experience.length > 0 ? data.experience[0].position : "Professional"
 
-  // Get initials for profile photo placeholder
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
-  }
 
   // Professional Template (Original)
   const ProfessionalTemplate = () => (
@@ -385,7 +376,7 @@ export default function ResumePreview({ data, template = "professional" }: Resum
   />
 )}
           </div>
-          <h1 className="text-lg font-bold text-black mb-1 leading-tight truncate">{data.personalInfo.fullName || "Your Name"}</h1>
+          <h1 className="text-lg font-bold text-black mb-1 leading-tight break-words whitespace-normal">{data.personalInfo.fullName || "Your Name"}</h1>
           <p className="text-xs font-medium text-sky-600 bg-sky-100 px-2 py-0.5 rounded-full inline-block mb-1 truncate">{jobTitle}</p>
         </div>
         {/* Contact Info */}
@@ -409,23 +400,22 @@ export default function ResumePreview({ data, template = "professional" }: Resum
             )}
           </ul>
         </section>
-        {/* Skills */}
+        {/* Skills - Minimal style: flat chips, no categories */}
         {data.skills.length > 0 && (
           <section>
             <h2 className="text-xs font-bold uppercase tracking-widest mb-2 border-b border-gray-200 pb-1 text-sky-700">Skills</h2>
-            <div className="flex flex-col gap-2">
-              {data.skills.map((skill) => (
-                <div key={skill.id} className="mb-1">
-                  <div className="font-semibold text-xs mb-0.5 text-black">{skill.category}</div>
-                  <div className="flex flex-wrap gap-1">
-                    {skill.items.split(",").map((item, idx) => (
-                      <span key={idx} className="bg-sky-100 text-sky-700 text-[10px] px-2 py-0.5 rounded-full">
-                        {item.trim()}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <div className="flex flex-wrap gap-2">
+              {data.skills
+                .flatMap((skill) => skill.items.split(",").map((item) => item.trim()))
+                .filter((item) => !!item)
+                .map((item, idx) => (
+                  <span
+                    key={"skill-flat-" + idx}
+                    className="bg-sky-50 text-sky-800 text-[11px] px-3 py-1 rounded-full font-medium"
+                  >
+                    {item}
+                  </span>
+                ))}
             </div>
           </section>
         )}

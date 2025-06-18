@@ -74,6 +74,7 @@ export interface ResumeData {
   projects: Project[]
   skills: Skill[]
   certifications: Certification[]
+  references: string[] // Added to fix type mismatch
 }
 
 interface ResumeFormProps {
@@ -95,7 +96,12 @@ const useAIFieldImprover = () => {
     suggested?: string
   } | null>(null)
 
-  const improveFieldWithAI = async (text: string, field: string) => {
+  const improveFieldWithAI = async (
+    section: "experience" | "education" | "project" | "certification" | "summary",
+    id: string,
+    field: string,
+    value: string,
+  ) => {
     setAiLoading(true)
     try {
       // Simulate API call
@@ -105,11 +111,11 @@ const useAIFieldImprover = () => {
       setAiFeedback({
         missing: ["Quantifiable achievements", "Specific technologies used"],
         improve: ["Add more action verbs", "Include measurable results"],
-        suggested: `Enhanced ${text} with improved clarity and impact metrics.`,
+        suggested: `Enhanced ${value} with improved clarity and impact metrics.`,
       })
 
       setAiLoading(false)
-      return `Enhanced ${text} with improved clarity and impact metrics.`
+      return `Enhanced ${value} with improved clarity and impact metrics.`
     } catch (e) {
       setAiLoading(false)
       throw e
@@ -136,7 +142,7 @@ export default function ResumeForm({ data, onChange, onPreview, selectedTemplate
 
   // Generic AI improvement handler for any field
   const improveFieldWithAI = async (
-    section: "experience" | "education" | "project" | "certification",
+    section: "experience" | "education" | "project" | "certification" | "summary",
     id: string,
     field: string,
     value: string,
@@ -235,7 +241,7 @@ export default function ResumeForm({ data, onChange, onPreview, selectedTemplate
       window.alert("Please enter a professional summary before improving with AI.")
       return
     }
-    const improved = await improveSummaryWithAI(data.summary, "summary")
+    const improved = await improveSummaryWithAI('summary', '', 'summary', data.summary)
     if (improved) {
       onChange({ ...data, summary: improved })
       window.alert("Summary improved with AI!")

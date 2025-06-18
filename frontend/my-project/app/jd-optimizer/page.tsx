@@ -173,7 +173,12 @@ export default function JDOptimizerPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [showJson, setShowJson] = useState(false);
   // Structured resume object for JSON output (if available)
-  const [resumeData, setResumeData] = useState<any | null>(null); // Replace 'any' with ResumeData if type is available
+  // If ResumeData type is available, import and use it
+  // import type { ResumeData } from "@/components/resume-form"
+  // const [resumeData, setResumeData] = useState<ResumeData | null>(null);
+  // For now, use a minimal type to avoid lint errors
+  type ResumeData = Record<string, unknown>;
+  const [resumeData] = useState<ResumeData | null>(null); // Removed unused setResumeData
 
   // Example: If you have a ResumeUpload or ResumeForm component that can provide structured data, set it here
   // e.g. <ResumeForm data={resumeData} onChange={setResumeData} />
