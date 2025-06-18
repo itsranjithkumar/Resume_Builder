@@ -111,7 +111,22 @@ export default function ResumePreview({ data, template = "professional" }: Resum
       <div className="w-80 bg-gray-50 p-8 flex flex-col gap-6">
         {/* Profile Section */}
         <div className="text-center">
-  <ProfileImage fullName={data.personalInfo.fullName} image={data.personalInfo.image} getInitials={getInitials} />
+  <div className="w-24 h-24 rounded-full bg-gray-200 mx-auto mb-3 flex items-center justify-center text-3xl font-extrabold text-gray-700 border-2 border-blue-600 overflow-hidden">
+  {data.personalInfo.image && !imgError ? (
+    <img
+      src={data.personalInfo.image}
+      alt={data.personalInfo.fullName || "Profile"}
+      className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
+      onError={() => setImgError(true)}
+    />
+  ) : (
+    <img
+      src="/resume.png"
+      alt="Default Profile"
+      className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
+    />
+  )}
+</div>
   <h1 className="text-xl font-bold text-blue-600 mb-1 leading-tight">
     {data.personalInfo.fullName || "Your Name"}
   </h1>
@@ -355,26 +370,20 @@ export default function ResumePreview({ data, template = "professional" }: Resum
         {/* Profile Photo/Initials */}
         <div className="text-center mb-4">
           <div className="w-24 h-24 rounded-full bg-gray-200 mx-auto mb-3 flex items-center justify-center text-3xl font-extrabold text-gray-700 border-2 border-sky-400 overflow-hidden">
-            {data.personalInfo.image ? (
-              <img
-                src={data.personalInfo.image}
-                alt={data.personalInfo.fullName || "Profile"}
-                className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
-              />
-            ) : (
-              <img
-                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(data.personalInfo.fullName || 'Resume User')}&background=random`}
-                alt="Default Profile"
-                className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
-                onError={(e) => {
-                  // fallback to initials if even the default fails
-                  const parent = (e.target as HTMLImageElement).parentElement;
-                  if (parent) {
-                    parent.innerHTML = data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN";
-                  }
-                }}
-              />
-            )}
+            {data.personalInfo.image && !imgError ? (
+  <img
+    src={data.personalInfo.image}
+    alt={data.personalInfo.fullName || "Profile"}
+    className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
+    onError={() => setImgError(true)}
+  />
+) : (
+  <img
+    src="/creative.png"
+    alt="Default Profile"
+    className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
+  />
+)}
           </div>
           <h1 className="text-lg font-bold text-black mb-1 leading-tight truncate">{data.personalInfo.fullName || "Your Name"}</h1>
           <p className="text-xs font-medium text-sky-600 bg-sky-100 px-2 py-0.5 rounded-full inline-block mb-1 truncate">{jobTitle}</p>
@@ -597,26 +606,20 @@ export default function ResumePreview({ data, template = "professional" }: Resum
         {/* Profile Section */}
         <div className="text-center">
           <div className="w-24 h-24 rounded-full bg-gray-200 mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-gray-500 overflow-hidden">
-            {data.personalInfo.image ? (
-              <img
-                src={data.personalInfo.image}
-                alt={data.personalInfo.fullName || "Profile"}
-                className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
-              />
-            ) : (
-              <img
-                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(data.personalInfo.fullName || 'Resume User')}&background=random`}
-                alt="Default Profile"
-                className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
-                onError={(e) => {
-                  // fallback to initials if even the default fails
-                  const parent = (e.target as HTMLImageElement).parentElement;
-                  if (parent) {
-                    parent.innerHTML = data.personalInfo.fullName ? getInitials(data.personalInfo.fullName) : "YN";
-                  }
-                }}
-              />
-            )}
+            {data.personalInfo.image && !imgError ? (
+  <img
+    src={data.personalInfo.image}
+    alt={data.personalInfo.fullName || "Profile"}
+    className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
+    onError={() => setImgError(true)}
+  />
+) : (
+  <img
+    src="/profile-default.png"
+    alt="Default Profile"
+    className="w-full h-full object-cover rounded-full border border-gray-300 shadow"
+  />
+)}
           </div>
           <h1 className="text-xl font-light text-gray-800 mb-1 leading-tight">
             {data.personalInfo.fullName || "Your Name"}

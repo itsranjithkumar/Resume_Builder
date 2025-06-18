@@ -10,7 +10,71 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, Trash2, Upload, Eye } from "lucide-react"
-import type { ResumeData } from "@/app/page"
+
+interface PersonalInfo {
+  fullName: string
+  email: string
+  phone: string
+  location: string
+  linkedin: string
+  website: string
+  image: string
+}
+
+interface Experience {
+  id: string
+  company: string
+  position: string
+  location: string
+  startDate: string
+  endDate: string
+  current: boolean
+  description: string
+}
+
+interface Education {
+  id: string
+  institution: string
+  degree: string
+  field: string
+  startDate: string
+  endDate: string
+  gpa: string
+  location: string
+  description: React.ReactNode
+}
+
+interface Project {
+  id: string
+  name: string
+  description: string
+  technologies: string
+  link: string
+}
+
+interface Skill {
+  id: string
+  category: string
+  items: string
+}
+
+interface Certification {
+  id: string
+  name: string
+  issuer: string
+  date: string
+  link: string
+}
+
+export interface ResumeData {
+  personalInfo: PersonalInfo
+  summary: string
+  experience: Experience[]
+  education: Education[]
+  projects: Project[]
+  skills: Skill[]
+  certifications: Certification[]
+}
 
 interface ResumeFormProps {
   data: ResumeData
@@ -21,7 +85,39 @@ interface ResumeFormProps {
 }
 
 import { useEffect } from "react"
-import { useAIFieldImprover } from "@/hooks/use-ai-field-improver"
+
+// Mock AI improvement hook
+const useAIFieldImprover = () => {
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiFeedback, setAiFeedback] = useState<{
+    missing: string[]
+    improve: string[]
+    suggested?: string
+  } | null>(null)
+
+  const improveFieldWithAI = async (text: string, field: string) => {
+    setAiLoading(true)
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      // Mock feedback
+      setAiFeedback({
+        missing: ["Quantifiable achievements", "Specific technologies used"],
+        improve: ["Add more action verbs", "Include measurable results"],
+        suggested: `Enhanced ${text} with improved clarity and impact metrics.`,
+      })
+
+      setAiLoading(false)
+      return `Enhanced ${text} with improved clarity and impact metrics.`
+    } catch (e) {
+      setAiLoading(false)
+      throw e
+    }
+  }
+
+  return { aiLoading, aiFeedback, improveFieldWithAI, setAiFeedback }
+}
 
 export default function ResumeForm({ data, onChange, onPreview, selectedTemplate, onTemplateChange }: ResumeFormProps) {
   useEffect(() => {
@@ -287,19 +383,19 @@ export default function ResumeForm({ data, onChange, onPreview, selectedTemplate
       id: "professional",
       name: "Professional",
       description: "Clean and modern design with sidebar layout",
-      preview: "/placeholder.svg?height=200&width=150",
+      preview: "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&h=500&fit=crop&crop=top",
     },
     {
       id: "creative",
       name: "Creative",
       description: "Bold and colorful design for creative professionals",
-      preview: "/placeholder.svg?height=200&width=150",
+      preview: "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=400&h=500&fit=crop&crop=top",
     },
     {
       id: "minimal",
       name: "Minimal",
       description: "Simple and elegant single-column layout",
-      preview: "/placeholder.svg?height=200&width=150",
+      preview: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=500&fit=crop&crop=top",
     },
   ]
 
@@ -324,7 +420,7 @@ export default function ResumeForm({ data, onChange, onPreview, selectedTemplate
               >
                 <div className="aspect-[3/4] bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
                   <img
-                    src={template.preview || "/placeholder.svg"}
+                    src={template.preview || "/resume.png"}
                     alt={`${template.name} template preview`}
                     className="w-full h-full object-cover rounded-lg"
                   />
