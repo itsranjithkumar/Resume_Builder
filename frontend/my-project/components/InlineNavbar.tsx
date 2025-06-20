@@ -3,9 +3,21 @@
 import { useUser } from "./useUser";
 import Image from "next/image";
 
+import { usePathname, useRouter } from "next/navigation";
+
 export default function InlineNavbar() {
   const user = useUser();
-  console.log(user, "user");
+  const pathname = usePathname();
+  const router = useRouter();
+  // Hide navbar on /login
+  if (pathname === "/login") return null;
+
+  function handleLogout(e: React.MouseEvent) {
+    e.preventDefault();
+    localStorage.removeItem("token");
+    router.push("/login");
+  }
+
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 mb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -65,12 +77,12 @@ export default function InlineNavbar() {
           {/* Logout Button */}
           <div className="flex items-center space-x-4">
             {user && (
-              <a
-                href="/login"
+              <button
+                onClick={handleLogout}
                 className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
               >
                 Logout
-              </a>
+              </button>
             )}
           </div>
 
@@ -136,12 +148,12 @@ export default function InlineNavbar() {
               </a>
             )}
             {user && (
-              <a
-                href="/login"
+              <button
+                onClick={handleLogout}
                 className="bg-gray-900 hover:bg-gray-800 text-white block px-3 py-2 rounded-md text-base font-medium"
               >
                 Logout
-              </a>
+              </button>
             )}
           </div>
         </div>
