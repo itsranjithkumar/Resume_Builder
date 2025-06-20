@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Trash2, Upload, Eye } from "lucide-react"
+import { Plus, Trash2, Upload, Eye, Save } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface PersonalInfo {
   fullName: string
@@ -126,6 +127,8 @@ const useAIFieldImprover = () => {
 }
 
 export default function ResumeForm({ data, onChange, onPreview, selectedTemplate, onTemplateChange }: ResumeFormProps) {
+  const router = useRouter()
+
   useEffect(() => {
     console.log("Resume JSON:", JSON.stringify(data, null, 2))
   }, [data])
@@ -139,6 +142,38 @@ export default function ResumeForm({ data, onChange, onPreview, selectedTemplate
   const [educationAiLoading, setEducationAiLoading] = useState<Record<string, Record<string, boolean>>>({})
   const [projectAiLoading, setProjectAiLoading] = useState<Record<string, Record<string, boolean>>>({})
   const [certificationAiLoading, setCertificationAiLoading] = useState<Record<string, Record<string, boolean>>>({})
+
+  // Save resume function
+  const handleSaveResume = () => {
+    try {
+      // Get existing saved resumes from localStorage
+      const existingResumes = JSON.parse(localStorage.getItem("savedResumes") || "[]")
+
+      // Create a new resume entry with timestamp and basic info for identification
+      const resumeEntry = {
+        id: Date.now().toString(),
+        savedAt: new Date().toISOString(),
+        title: data.personalInfo.fullName || "Untitled Resume",
+        template: selectedTemplate,
+        data: data,
+      }
+
+      // Add to existing resumes
+      const updatedResumes = [...existingResumes, resumeEntry]
+
+      // Save back to localStorage
+      localStorage.setItem("savedResumes", JSON.stringify(updatedResumes))
+
+      // Show success message
+      alert("Resume saved successfully!")
+
+      // Navigate to profile page
+      router.push("/profile")
+    } catch (error) {
+      console.error("Error saving resume:", error)
+      alert("Failed to save resume. Please try again.")
+    }
+  }
 
   // Generic AI improvement handler for any field
   const improveFieldWithAI = async (
@@ -407,7 +442,6 @@ export default function ResumeForm({ data, onChange, onPreview, selectedTemplate
 
   return (
     <div className="space-y-8">
-
       {/* Template Selection */}
       <Card>
         <CardHeader>
@@ -1055,8 +1089,12 @@ export default function ResumeForm({ data, onChange, onPreview, selectedTemplate
         </CardContent>
       </Card>
 
-      {/* Preview Button */}
-      <div className="flex justify-center pt-8">
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-4 pt-8">
+        <Button onClick={handleSaveResume} size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-3">
+          <Save className="h-5 w-5 mr-2" />
+          Save Details
+        </Button>
         <Button onClick={onPreview} size="lg" className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-3">
           <Eye className="h-5 w-5 mr-2" />
           Preview Resume

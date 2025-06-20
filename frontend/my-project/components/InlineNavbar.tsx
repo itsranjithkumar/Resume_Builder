@@ -31,7 +31,7 @@ export default function InlineNavbar() {
                 JSON Resume
               </a>
               {user ? (
-                <a href="/login" className="flex items-center px-3 py-2">
+                <a href="/profile" className="flex items-center px-3 py-2">
                   {user.photoURL ? (
                     <img
                       src={user.photoURL}

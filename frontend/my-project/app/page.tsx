@@ -69,18 +69,28 @@ export default function Home() {
   // Key for localStorage
   const RESUME_STORAGE_KEY = "resumeData";
 
-  // Helper to get initial data from localStorage or fallback to default
+  // Helper to get initial data from editingResume, resumeData, or fallback to default
   const getInitialResumeData = () => {
     if (typeof window !== "undefined") {
+      // 1. Check for editingResume first
+      const editing = localStorage.getItem("editingResume");
+      if (editing) {
+        try {
+          const parsed = JSON.parse(editing);
+          localStorage.removeItem("editingResume");
+          // Use the .data field from SavedResume object
+          return parsed.data || parsed;
+        } catch {}
+      }
+      // 2. Fallback to resumeData (draft)
       const saved = localStorage.getItem(RESUME_STORAGE_KEY);
       if (saved) {
         try {
           return JSON.parse(saved);
-        } catch {
-          // Fallback to default if parse fails
-        }
+        } catch {}
       }
     }
+    // 3. Default blank resume
     return {
       references: [],
       personalInfo: {
