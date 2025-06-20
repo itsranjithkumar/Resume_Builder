@@ -241,7 +241,7 @@ export default function ResumeForm({ data, onChange, onPreview, selectedTemplate
       window.alert("Please enter a professional summary before improving with AI.")
       return
     }
-    const improved = await improveSummaryWithAI('summary', '', 'summary', data.summary)
+    const improved = await improveSummaryWithAI("summary", "", "summary", data.summary)
     if (improved) {
       onChange({ ...data, summary: improved })
       window.alert("Summary improved with AI!")
@@ -407,6 +407,7 @@ export default function ResumeForm({ data, onChange, onPreview, selectedTemplate
 
   return (
     <div className="space-y-8">
+
       {/* Template Selection */}
       <Card>
         <CardHeader>

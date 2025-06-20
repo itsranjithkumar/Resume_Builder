@@ -61,6 +61,8 @@ export interface ResumeData {
   }>
 }
 
+import InlineNavbar from "@/components/InlineNavbar";
+
 export default function Home() {
   const [showPreview, setShowPreview] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState("professional")
@@ -116,8 +118,10 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+    <>
+      <InlineNavbar />
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
         {!showPreview ? (
           <>
             <div className="text-center mb-8">
@@ -147,5 +151,6 @@ export default function Home() {
         )}
       </div>
     </div>
-  )
+  </>
+)
 }
