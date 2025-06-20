@@ -403,7 +403,6 @@ export default function JDOptimizerPage() {
           <p className="text-sm text-muted-foreground mt-2">AI analysis typically takes 30-60 seconds</p>
         </div>
       </div>
-      <InlineNavbar />
     </div>
   )
 }
