@@ -827,6 +827,38 @@ export default function ResumePreview({ data, template = "professional" }: Resum
             </div>
           </div>
         )}
+
+        {/* Certifications Section */}
+        {data.certifications.length > 0 && (
+          <div className="mb-7">
+            <h2 className="text-base font-light text-gray-800 mb-4 pb-1 border-b border-gray-300 uppercase tracking-wider">
+              Certifications
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              {data.certifications.map((cert) => (
+                <div key={cert.id} className="text-xs">
+                  <div className="font-semibold text-gray-800 mb-1">
+                    {cert.link ? (
+                      <a
+                        href={cert.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-800 hover:text-gray-900 flex items-center gap-1"
+                      >
+                        {cert.name}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    ) : (
+                      cert.name
+                    )}
+                  </div>
+                  {cert.issuer && <div className="text-gray-600 mb-1">{cert.issuer}</div>}
+                  {cert.date && <div className="text-gray-500">{formatDate(cert.date)}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
