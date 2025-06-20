@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "./useUser";
+import Image from "next/image";
 
 export default function InlineNavbar() {
   const user = useUser();
@@ -30,9 +31,26 @@ export default function InlineNavbar() {
                 JSON Resume
               </a>
               {user ? (
-                <a href="/profile" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                  Profile ({user.sub})
+                <a href="/login" className="flex items-center px-3 py-2">
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt="Profile"
+                      className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-sm"
+                    />
+                  ) : (
+                    <span
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-green-600 text-white font-bold text-lg border-2 border-gray-300 shadow-sm"
+                      style={{ minWidth: 32, minHeight: 32 }}
+                    >
+                      {user.sub ? user.sub[0].toUpperCase() : "U"}
+                    </span>
+                  )}
+                  <span className="ml-2 text-gray-700 text-sm font-medium">{user.sub}</span>
+                  <span className="ml-2 text-gray-700 text-sm"></span>
+                  
                 </a>
+
               ) : (
                 <a
                   href="/login"
@@ -91,8 +109,23 @@ export default function InlineNavbar() {
               JSON Resume
             </a>
             {user ? (
-              <a href="/profile" className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">
-                Profile ({user.sub})
+              <a href="/profile" className="flex items-center block px-3 py-2">
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-sm"
+                  />
+                ) : (
+                  <span
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-green-600 text-white font-bold text-lg border-2 border-gray-300 shadow-sm"
+                    style={{ minWidth: 32, minHeight: 32 }}
+                  >
+                    {user.sub ? user.sub[0].toUpperCase() : "U"}
+                  </span>
+                )}
+                <span className="ml-2 text-gray-700 text-base font-medium">{user.sub}</span>
+                <span className="ml-2 text-gray-700 text-base">Profile</span>
               </a>
             ) : (
               <a

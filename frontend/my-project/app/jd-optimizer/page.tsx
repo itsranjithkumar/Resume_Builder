@@ -10,6 +10,7 @@ import { JobDescriptionInput } from "@/components/job-description-input"
 import { AnalysisResults } from "@/components/analysis-results"
 import { ResumeEditor } from "@/components/resume-editor"
 import { OptimizationStats } from "@/components/optimization-stats"
+import InlineNavbar from "@/components/InlineNavbar"
 
 // DUMMY AI FUNCTIONS - Replace these with real AI integration
 // --- Rule-based JD/Resume Matcher (no AI) ---
@@ -402,6 +403,7 @@ export default function JDOptimizerPage() {
           <p className="text-sm text-muted-foreground mt-2">AI analysis typically takes 30-60 seconds</p>
         </div>
       </div>
+      <InlineNavbar />
     </div>
   )
 }
