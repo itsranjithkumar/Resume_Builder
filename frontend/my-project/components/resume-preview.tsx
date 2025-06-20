@@ -274,12 +274,12 @@ export default function ResumePreview({ data, template = "professional" }: Resum
         {/* Projects Section */}
         {data.projects.length > 0 && (
           <div className="mb-7">
-            <h2 className="text-base font-bold text-blue-600 mb-4 pb-1 border-b-2 border-gray-200">Projects</h2>
+            <h2 className="text-base font-bold text-blue-600 mb-4 pb-1 border-b-2 border-gray-200 text-left -ml-2">Projects</h2>
             <div className="space-y-4">
               {data.projects.map((project) => (
-                <div key={project.id} className="relative pl-4">
-                  <div className="absolute left-0 top-1 w-2 h-2 bg-blue-600 rounded-full"></div>
+                <div key={project.id}>
                   <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-block w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
                     <h3 className="text-sm font-semibold text-gray-800">{project.name}</h3>
                     {project.link && (
                       <>
