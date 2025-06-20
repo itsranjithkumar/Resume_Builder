@@ -23,7 +23,7 @@ const GoogleAuthButton: React.FC = () => {
       // Store user info for profile display
       localStorage.setItem('user', JSON.stringify({
         email: data.email,
-        fullName: data.full_name || data.name || ''
+        name: data.full_name || data.name || ''
       }));
       window.location.href = '/';
     } catch {

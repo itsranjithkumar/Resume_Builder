@@ -42,7 +42,7 @@ export default function LoginPage() {
         // Store user info for profile display
         localStorage.setItem("user", JSON.stringify({
           email: data.email,
-          fullName: data.full_name || data.name || ""
+          name: data.full_name || data.name || data.fullName || ""
         }))
         window.location.href = "/"
       }

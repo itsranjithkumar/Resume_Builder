@@ -1,6 +1,10 @@
 "use client";
 
+import { useUser } from "./useUser";
+
 export default function InlineNavbar() {
+  const user = useUser();
+  console.log(user, "user");
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 mb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,17 +29,31 @@ export default function InlineNavbar() {
               >
                 JSON Resume
               </a>
+              {user ? (
+                <a href="/profile" className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                  Profile ({user.email})
+                </a>
+              ) : (
+                <a
+                  href="/login"
+                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                >
+                  Login
+                </a>
+              )}
             </div>
           </div>
 
           {/* Logout Button */}
           <div className="flex items-center space-x-4">
-            <a
-              href="/login"
-              className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-            >
-              Logout
-            </a>
+            {user && (
+              <a
+                href="/login"
+                className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              >
+                Logout
+              </a>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -72,12 +90,27 @@ export default function InlineNavbar() {
             >
               JSON Resume
             </a>
-            <a
-              href="/login"
-              className="bg-gray-900 hover:bg-gray-800 text-white block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Logout
-            </a>
+            {user ? (
+              <a href="/profile" className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium">
+                Profile ({user.email })
+              </a>
+
+            ) : (
+              <a
+                href="/login"
+                className="text-gray-600 hover:text-gray-900 block px-3 py-2 rounded-md text-base font-medium"
+              >
+                Login
+              </a>
+            )}
+            {user && (
+              <a
+                href="/login"
+                className="bg-gray-900 hover:bg-gray-800 text-white block px-3 py-2 rounded-md text-base font-medium"
+              >
+                Logout
+              </a>
+            )}
           </div>
         </div>
       </div>
